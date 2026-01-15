@@ -1,0 +1,55 @@
+{% extends "Base/base.html" %}
+{% block title %}Ventes{% endblock %}
+
+{% block content %}
+<h3>Ventes</h3>
+
+<form method="get" class="row mb-3">
+    <div class="col-md-3">
+        <input type="date" name="date" class="form-control">
+    </div>
+</form>
+
+<form method="post" class="row g-2 mb-4">
+    {% csrf_token %}
+    <div class="col-md-2">{{ form.product }}</div>
+    <div class="col-md-2">{{ form.carton }}</div>
+    <div class="col-md-2">{{ form.sale_type }}</div>
+    <div class="col-md-2">{{ form.weight_sold }}</div>
+    <div class="col-md-2">{{ form.unit_price }}</div>
+    <div class="col-md-1">{{ form.discount }}</div>
+    <div class="col-md-1">
+        <button class="btn btn-success w-100">✔</button>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Produit</th>
+            <th>Poids</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for v in ventes %}
+        <tr>
+            <td>{{ v.created_at|date:"d/m/Y" }}</td>
+            <td>{{ v.product.name }}</td>
+            <td>{{ v.weight_sold }} Kg</td>
+            <td>{{ v.total_price }} FCFA</td>
+            <td>
+                <form method="post" action="{% url 'stock_produit:ventes_delete' v.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

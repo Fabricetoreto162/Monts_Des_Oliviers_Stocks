@@ -1,0 +1,25 @@
+{% extends "Base/base.html" %}
+{% block title %}Utilisateurs{% endblock %}
+
+{% block content %}
+<h3>Utilisateurs</h3>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Type</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.email }}</td>
+            <td>{{ u.user_type }}</td>
+            <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

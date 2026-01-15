@@ -1,0 +1,44 @@
+{% extends "Base/base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row text-center">
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total du jour</h5>
+                <h3>{{ total_jour }} FCFA</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>CA mensuel</h5>
+                <h3>{{ chiffre_affaire_mois }} FCFA</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-warning">
+            <div class="card-body">
+                <h5>Produits</h5>
+                <h3>{{ produits_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5>Stocks faibles</h5>
+                <h3>{{ stocks_faibles.count }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

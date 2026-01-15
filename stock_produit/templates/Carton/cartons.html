@@ -1,0 +1,41 @@
+{% extends "Base/base.html" %}
+{% block title %}Cartons{% endblock %}
+
+{% block content %}
+<h3>Cartons disponibles</h3>
+
+<form method="post" class="row g-2 mb-4">
+    {% csrf_token %}
+    <div class="col-md-4">{{ form.produit }}</div>
+    <div class="col-md-4">{{ form.initial_weight }}</div>
+    <div class="col-md-2">
+        <button class="btn btn-success w-100">Ajouter</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Produit</th>
+            <th>Poids restant</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in cartons %}
+        <tr>
+            <td>{{ c.product.name }}</td>
+            <td>{{ c.remaining_weight }} Kg</td>
+            <td>
+                <form method="post" action="{% url 'stock_produit:cartons_delete' c.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
