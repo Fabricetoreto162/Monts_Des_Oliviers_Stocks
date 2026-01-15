@@ -1,41 +1,572 @@
 {% extends "Base/base.html" %}
-{% block title %}Cartons{% endblock %}
+
+{% block title %}Cartons - Monts des Oliviers{% endblock %}
+{% block page_title %}Gestion des Cartons{% endblock %}
+{% block page_subtitle %}Gérez les cartons par produit{% endblock %}
 
 {% block content %}
-<h3>Cartons disponibles</h3>
+<style>
+    /* Style global */
+    .cartons-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    /* Titre principal */
+    h3.mb-3 {
+        color: #1e88e5;
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #e3f2fd;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    h3.mb-3::before {
+        content: "📦";
+        font-size: 1.5rem;
+    }
+    
+    /* Carte formulaire */
+    .card.mb-4 {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(30, 136, 229, 0.15);
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        margin-bottom: 2rem !important;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
+    
+    .card-body h5 {
+        color: #1565c0;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e3f2fd;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .card-body h5::before {
+        content: "🔄";
+        font-size: 1.2rem;
+    }
+    
+    /* Formulaire */
+    form {
+        margin-top: 1.5rem;
+    }
+    
+    .row.g-2 {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e1e5eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        height: 50px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #1e88e5;
+        box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        outline: none;
+    }
+    
+    /* Boutons */
+    .btn-primary {
+        background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(30, 136, 229, 0.3);
+        background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.2);
+        background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    }
+    
+    /* Accordéon */
+    .accordion {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e3f2fd;
+    }
+    
+    .accordion-item {
+        border: none;
+        background: transparent;
+        margin-bottom: 0;
+        border-bottom: 1px solid #e3f2fd;
+        transition: all 0.3s;
+    }
+    
+    .accordion-item:last-child {
+        border-bottom: none;
+    }
+    
+    .accordion-item.border-danger {
+        border-left: 4px solid #ff4757;
+        background: linear-gradient(to right, #fff5f5, white);
+    }
+    
+    .accordion-item:hover {
+        background: #f8fafc;
+    }
+    
+    /* En-tête accordéon */
+    .accordion-header {
+        margin: 0;
+    }
+    
+    .accordion-button {
+        background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+        color: #333;
+        border: none;
+        padding: 20px 25px;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 0;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #1565c0;
+        box-shadow: inset 0 -1px 0 rgba(30, 136, 229, 0.1);
+    }
+    
+    .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%231e88e5'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        transition: transform 0.3s;
+    }
+    
+    .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%231565c0'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+    
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: transparent;
+    }
+    
+    /* Badges dans l'accordéon */
+    .badge-count {
+        background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0 5px;
+    }
+    
+    .badge-weight {
+        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0 5px;
+    }
+    
+    /* Corps accordéon */
+    .accordion-collapse {
+        background: white;
+    }
+    
+    .accordion-body {
+        padding: 25px;
+        background: #fefefe;
+    }
+    
+    /* Items de carton */
+    .border.p-2.mb-2 {
+        border: 2px solid #e3f2fd !important;
+        border-radius: 12px;
+        padding: 18px 20px !important;
+        margin-bottom: 12px !important;
+        background: white;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .border.p-2.mb-2:hover {
+        border-color: #1e88e5 !important;
+        box-shadow: 0 4px 12px rgba(30, 136, 229, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Info carton */
+    .border.p-2.mb-2 > div:first-child {
+        font-size: 1rem;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .border.p-2.mb-2 > div:first-child::before {
+        content: "📦";
+        font-size: 1.2rem;
+    }
+    
+    .carton-id {
+        font-weight: 700;
+        color: #1e88e5;
+        background: #e3f2fd;
+        padding: 3px 8px;
+        border-radius: 6px;
+        margin-right: 8px;
+    }
+    
+    .carton-weight {
+        font-weight: 700;
+        color: #4CAF50;
+        margin-left: 10px;
+    }
+    
+    /* Actions carton */
+    .border.p-2.mb-2 > div:last-child {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-warning:hover {
+        background: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        color: white;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #FF4757 0%, #FF3742 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #FF3742 0%, #FF1E2D 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+        color: white;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .accordion-button {
+            padding: 15px 20px;
+            font-size: 0.95rem;
+        }
+        
+        .accordion-body {
+            padding: 20px;
+        }
+        
+        .border.p-2.mb-2 {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .border.p-2.mb-2 > div:last-child {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+            justify-content: center;
+            margin: 5px 0;
+        }
+        
+        .btn-secondary {
+            margin-left: 0;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .row.g-2 .col-md-4 {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .accordion-button {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .badge-count, .badge-weight {
+            display: inline-block;
+            margin: 2px;
+        }
+    }
+    
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card.mb-4 {
+        animation: slideIn 0.5s ease-out;
+    }
+    
+    .accordion-item {
+        animation: slideIn 0.5s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    .accordion-item:nth-child(1) { animation-delay: 0.1s; }
+    .accordion-item:nth-child(2) { animation-delay: 0.2s; }
+    .accordion-item:nth-child(3) { animation-delay: 0.3s; }
+    .accordion-item:nth-child(4) { animation-delay: 0.4s; }
+    .accordion-item:nth-child(5) { animation-delay: 0.5s; }
+    
+    /* État vide */
+    .accordion:empty::before {
+        content: "Aucun produit avec cartons disponibles";
+        display: block;
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+        font-size: 1.1rem;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 2px dashed #e3f2fd;
+        margin-top: 20px;
+    }
+</style>
 
-<form method="post" class="row g-2 mb-4">
-    {% csrf_token %}
-    <div class="col-md-4">{{ form.produit }}</div>
-    <div class="col-md-4">{{ form.initial_weight }}</div>
-    <div class="col-md-2">
-        <button class="btn btn-success w-100">Ajouter</button>
+<div class="cartons-page">
+    <h3 class="mb-3">Gestion des cartons</h3>
+
+    <!-- 🔹 FORMULAIRE CREATE / UPDATE -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>
+                {% if carton_edit %}
+                    <i class="fas fa-edit me-2"></i>Modifier le carton #{{ carton_edit.id }}
+                {% else %}
+                    <i class="fas fa-plus-circle me-2"></i>Ajouter un carton
+                {% endif %}
+            </h5>
+
+            <form method="post"
+                  action="{% if carton_edit %}{% url 'cartons_update' carton_edit.id %}{% else %}{% url 'cartons' %}{% endif %}">
+                {% csrf_token %}
+
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            {{ form.produit }}
+                            <label for="{{ form.produit.id_for_label }}">Produit</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            {{ form.initial_weight }}
+                            <label for="{{ form.initial_weight.id_for_label }}">Poids initial (Kg)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary mt-3">
+                    <i class="fas {% if carton_edit %}fa-save{% else %}fa-plus{% endif %} me-2"></i>
+                    {% if carton_edit %}Mettre à jour{% else %}Ajouter{% endif %}
+                </button>
+
+                {% if carton_edit %}
+                    <a href="{% url 'cartons' %}" class="btn btn-secondary mt-3">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </a>
+                {% endif %}
+            </form>
+        </div>
     </div>
-</form>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Produit</th>
-            <th>Poids restant</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for c in cartons %}
-        <tr>
-            <td>{{ c.product.name }}</td>
-            <td>{{ c.remaining_weight }} Kg</td>
-            <td>
-                <form method="post" action="{% url 'stock_produit:cartons_delete' c.id %}">
-                    {% csrf_token %}
-                    <button class="btn btn-danger btn-sm">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
+    <!-- 🔹 LISTE PAR PRODUIT -->
+    <div class="accordion" id="accordionProduits">
+        {% for item in produits_groupes %}
+        <div class="accordion-item {% if item.stock_faible %}border-danger{% endif %}">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" data-bs-toggle="collapse"
+                        data-bs-target="#prod{{ item.produit.id }}">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="fas fa-archive" style="color: #1e88e5;"></i>
+                        <strong>{{ item.produit.name }}</strong>
+                    </span>
+                    <span class="ms-auto d-flex gap-2">
+                        <span class="badge-count">{{ item.nombre_cartons }} carton{{ item.nombre_cartons|pluralize:"s" }}</span>
+                        <span class="badge-weight">{{ item.total_weight|floatformat:2 }} Kg</span>
+                    </span>
+                </button>
+            </h2>
+
+            <div id="prod{{ item.produit.id }}" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    {% for carton in item.cartons reversed %}
+                    <div class="d-flex justify-content-between border p-2 mb-2">
+                        <div>
+                            <span class="carton-id">{{ carton.produit.name }}</span>
+                            <span>{{ carton.remaining_weight }} <span class="carton-weight">Kg</span></span>
+                        </div>
+
+                        <div>
+                            <a href="{% url 'cartons_update' carton.id %}"
+                               class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit me-1"></i>
+                            </a>
+
+                            <a href="{% url 'cartons_delete' carton.id %}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer ce carton ?')">
+                                <i class="fas fa-trash me-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+</div>
+
+<script>
+    // Animation pour les éléments du formulaire
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ajouter des classes aux champs du formulaire
+        const produitField = document.querySelector('#{{ form.produit.id_for_label }}');
+        const weightField = document.querySelector('#{{ form.initial_weight.id_for_label }}');
+        
+        if (produitField) {
+            produitField.classList.add('form-select');
+            produitField.style.height = 'calc(3.5rem + 2px)';
+        }
+        
+        if (weightField) {
+            weightField.classList.add('form-control');
+            weightField.placeholder = "Entrez le poids";
+        }
+        
+        // Ajouter des animations aux cartons
+        const cartonItems = document.querySelectorAll('.border.p-2.mb-2');
+        cartonItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+        // Gestion des accordéons
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i.fa-archive');
+                if (icon) {
+                    icon.style.transform = 'rotate(15deg)';
+                    setTimeout(() => {
+                        icon.style.transform = 'rotate(0deg)';
+                    }, 300);
+                }
+            });
+        });
+        
+        // Effet visuel pour les cartons avec stock faible
+        const lowStockItems = document.querySelectorAll('.accordion-item.border-danger .accordion-button');
+        lowStockItems.forEach(item => {
+            const icon = item.querySelector('i.fa-archive');
+            if (icon) {
+                icon.style.color = '#ff4757';
+            }
+        });
+    });
+</script>
 {% endblock %}

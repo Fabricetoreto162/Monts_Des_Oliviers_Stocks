@@ -1,55 +1,268 @@
 {% extends "Base/base.html" %}
-{% block title %}Ventes{% endblock %}
+
+{% block title %}Ventes - Monts des Oliviers{% endblock %}
+{% block page_title %}Gestion des ventes{% endblock %}
+{% block page_subtitle %}Système de vente basé sur le poids{% endblock %}
 
 {% block content %}
-<h3>Ventes</h3>
-
-<form method="get" class="row mb-3">
+<div class="container mt-4">
+    <!-- ================= FILTRE DATE ================= -->
+<form method="get" class="row mb-3 align-items-end">
     <div class="col-md-3">
-        <input type="date" name="date" class="form-control">
+        <label class="form-label fw-bold">📅 Date des ventes</label>
+        <input type="date"
+               name="date"
+               value="{{ selected_date }}"
+               class="form-control"
+               onchange="this.form.submit()">
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Total journalier</label>
+        <input type="text"
+               class="form-control fw-bold text-success"
+               value="{{ total_jour }} FCFA"
+               readonly>
     </div>
 </form>
 
-<form method="post" class="row g-2 mb-4">
-    {% csrf_token %}
-    <div class="col-md-2">{{ form.product }}</div>
-    <div class="col-md-2">{{ form.carton }}</div>
-    <div class="col-md-2">{{ form.sale_type }}</div>
-    <div class="col-md-2">{{ form.weight_sold }}</div>
-    <div class="col-md-2">{{ form.unit_price }}</div>
-    <div class="col-md-1">{{ form.discount }}</div>
-    <div class="col-md-1">
-        <button class="btn btn-success w-100">✔</button>
-    </div>
-</form>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Produit</th>
-            <th>Poids</th>
-            <th>Total</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for v in ventes %}
-        <tr>
-            <td>{{ v.created_at|date:"d/m/Y" }}</td>
-            <td>{{ v.product.name }}</td>
-            <td>{{ v.weight_sold }} Kg</td>
-            <td>{{ v.total_price }} FCFA</td>
-            <td>
-                <form method="post" action="{% url 'stock_produit:ventes_delete' v.id %}">
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between mb-3">
+        <h4>📦 Gestion des ventes</h4>
+        <div class="fw-bold text-success">
+            Total du jour : {{ total_jour }} FCFA
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- ================= FORMULAIRE ================= -->
+        <div class="col-md-4">
+            <div class="card shadow p-3">
+
+                <h6 class="mb-3">
+                    {% if edit_mode %}✏️ Modifier la vente{% else %}➕ Nouvelle vente{% endif %}
+                </h6>
+
+                <form method="post" id="saleForm">
                     {% csrf_token %}
-                    <button class="btn btn-danger btn-sm">
-                        <i class="fa fa-trash"></i>
+
+                    <div class="mb-2">
+                        {{ form.produit.label_tag }}
+                        {{ form.produit }}
+                    </div>
+
+                    <div class="mb-2">
+                        {{ form.carton.label_tag }}
+                        {{ form.carton }}
+                    </div>
+
+                    <div class="mb-2">
+                        {{ form.type_vente.label_tag }}
+                        {{ form.type_vente }}
+                    </div>
+
+                    <div class="mb-2" id="poids-block">
+                        {{ form.poids_vendu.label_tag }}
+                        {{ form.poids_vendu }}
+                    </div>
+
+                    <div class="mb-2">
+                        {{ form.prix_unitaire.label_tag }}
+                        {{ form.prix_unitaire }}
+                    </div>
+
+                    <div class="mb-2">
+                        {{ form.reduction.label_tag }}
+                        {{ form.reduction }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Total</label>
+                        <input type="text"
+                               id="totalPreview"
+                               class="form-control fw-bold text-success"
+                               readonly>
+                    </div>
+
+                    <button class="btn btn-primary w-100">
+                        💾 Enregistrer
                     </button>
+
+                    {% if edit_mode %}
+                    <a href="{% url 'ventes' %}"
+                       class="btn btn-secondary w-100 mt-2">
+                        Annuler
+                    </a>
+                    {% endif %}
                 </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+            </div>
+        </div>
+
+        <!-- ================= TABLE ================= -->
+        <div class="col-md-8">
+            <div class="card shadow p-3">
+
+                <h6 class="mb-3">📋 Liste des ventes</h6>
+
+                <table class="table table-bordered table-sm">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Produit</th>
+                            <th>Type</th>
+                            <th>Poids</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for v in ventes %}
+                        <tr>
+                            <td>{{ v.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ v.produit.name }}</td>
+                            <td>{{ v.get_type_vente_display }}</td>
+                            <td>
+                                {% if v.type_vente == "DETAIL" %}
+                                    {{ v.poids_vendu }} kg
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold text-success">
+                                {{ v.total_price }} FCFA
+                            </td>
+                            <td>
+                                <a href="{% url 'vente_modifier' v.id %}"
+                                   class="btn btn-warning btn-sm">✏️</a>
+
+                                <a href="{% url 'vente_supprimer' v.id %}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Supprimer cette vente ?')">
+                                   🗑
+                                </a>
+
+                                <button class="btn btn-secondary btn-sm"
+                                        onclick="imprimerRecu(
+                                            '{{ v.created_at|date:"d/m/Y H:i" }}',
+                                            '{{ v.produit.name }}',
+                                            '{{ v.get_type_vente_display }}',
+                                            '{{ v.poids_vendu|default:"" }}',
+                                            '{{ v.prix_unitaire }}',
+                                            '{{ v.reduction }}',
+                                            '{{ v.total_price }}'
+                                        )">
+                                    🧾
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                Aucune vente enregistrée
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+const produitSelect = document.getElementById("id_produit");
+const typeVente = document.getElementById("id_type_vente");
+const poidsInput = document.getElementById("id_poids_vendu");
+const prixInput = document.getElementById("id_prix_unitaire");
+const reductionInput = document.getElementById("id_reduction");
+const totalPreview = document.getElementById("totalPreview");
+const poidsBlock = document.getElementById("poids-block");
+
+/* ===== CALCUL TOTAL ===== */
+function calculerTotal() {
+    let poids = parseFloat(poidsInput?.value || 0);
+    let prix = parseFloat(prixInput.value || 0);
+    let reduction = parseFloat(reductionInput.value || 0);
+
+    let total = (typeVente.value === "DETAIL")
+        ? (poids * prix) - reduction
+        : prix - reduction;
+
+    totalPreview.value = total > 0 ? total.toFixed(0) + " FCFA" : "0 FCFA";
+}
+
+/* ===== AFFICHAGE POIDS ===== */
+function togglePoids() {
+    poidsBlock.style.display =
+        typeVente.value === "DETAIL" ? "block" : "none";
+    calculerTotal();
+    chargerPrix();
+}
+
+/* ===== CHARGER PRIX ===== */
+function chargerPrix() {
+    if (!produitSelect.value || !typeVente.value) return;
+
+    fetch(`/get-prix-unitaire/?produit=${produitSelect.value}&type=${typeVente.value}`)
+        .then(r => r.json())
+        .then(data => {
+            prixInput.value = data.prix;
+            calculerTotal();
+        });
+}
+
+/* ===== EVENTS ===== */
+poidsInput?.addEventListener("input", calculerTotal);
+reductionInput.addEventListener("input", calculerTotal);
+produitSelect.addEventListener("change", chargerPrix);
+typeVente.addEventListener("change", togglePoids);
+togglePoids();
+
+/* ===== REÇU ===== */
+function imprimerRecu(date, produit, type, poids, prix, reduction, total) {
+
+    let html = `
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial; }
+            .ticket {
+                width: 280px;
+                border: 1px solid #000;
+                padding: 10px;
+            }
+            h3 { text-align: center; }
+            .total { font-weight: bold; font-size: 18px; }
+        </style>
+    </head>
+    <body>
+        <div class="ticket">
+            <h3>🧾 REÇU</h3>
+            <p>Date : ${date}</p>
+            <p>Produit : ${produit}</p>
+            <p>Type : ${type}</p>
+            ${poids ? `<p>Poids : ${poids} kg</p>` : ""}
+            <p>Prix unitaire : ${prix} FCFA</p>
+            <p>Réduction : ${reduction} FCFA</p>
+            <hr>
+            <p class="total">TOTAL : ${total} FCFA</p>
+        </div>
+        <script>window.print();<\/script>
+    </body>
+    </html>`;
+
+    let w = window.open("", "", "width=350,height=500");
+    w.document.write(html);
+    w.document.close();
+}
+</script>
+
 {% endblock %}

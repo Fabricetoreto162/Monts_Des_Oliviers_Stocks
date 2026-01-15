@@ -513,7 +513,7 @@
     
     {% if produits %}
     <div class="product-grid">
-        {% for p in produits %}
+        {% for p in produits reversed %}
         <div class="product-card">
             <div class="product-header">
                 <h5>{{ p.name }}</h5>

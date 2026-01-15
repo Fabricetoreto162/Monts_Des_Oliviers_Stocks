@@ -1,35 +1,67 @@
 from django.db import models
+from decimal import Decimal
 from .produit import Produit
 from .carton import Carton
 
-class Sale(models.Model):
-    SALE_TYPE_CHOICES = [
-        ('detail', 'Détail'),
-        ('carton', 'Carton'),
-    ]
+
+class Vente(models.Model):
+
+    TYPE_VENTE_CHOICES = (
+        ("DETAIL", "Détail (Kg)"),
+        ("CARTON", "Carton entier"),
+    )
 
     produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
-    carton = models.ForeignKey(
-        Carton,
-        on_delete=models.SET_NULL,
+    carton = models.ForeignKey(Carton, on_delete=models.CASCADE)
+    type_vente = models.CharField(max_length=10, choices=TYPE_VENTE_CHOICES)
+
+    poids_vendu = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
         null=True,
         blank=True
     )
 
-    sale_type = models.CharField(max_length=10, choices=SALE_TYPE_CHOICES)
-    weight_sold = models.DecimalField(max_digits=10, decimal_places=2)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    reduction = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def update_stock(self):
+        """
+        Met à jour le stock du carton selon le type de vente
+        """
+
+        if self.type_vente == "DETAIL":
+            poids = Decimal(self.poids_vendu)
+
+        elif self.type_vente == "CARTON":
+            poids = Decimal(self.carton.remaining_weight)
+
+        else:
+            return
+
+        # 🔴 Sécurité : éviter stock négatif
+        if poids > self.carton.remaining_weight:
+            raise ValueError("Poids vendu supérieur au stock disponible")
+
+        # ✅ Mise à jour du stock
+        self.carton.remaining_weight -= poids
+
+        if self.carton.remaining_weight <= 0:
+            self.carton.remaining_weight = Decimal("0")
+            self.carton.is_sold_out = True
+
+        self.carton.save()
+
     def save(self, *args, **kwargs):
-        # Mise à jour automatique du carton
-        if self.carton and self.sale_type == 'detail':
-            self.carton.remaining_weight -= self.weight_sold
-            self.carton.save()
+        # Calcul automatique du total
+        if self.type_vente == "DETAIL":
+            self.total_price = (
+                self.poids_vendu * self.prix_unitaire
+            ) - self.reduction
+        else:
+            self.total_price = self.prix_unitaire - self.reduction
 
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.produit.name} - {self.total_price} FCFA"

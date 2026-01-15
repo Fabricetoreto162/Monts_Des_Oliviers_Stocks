@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Produit, Carton, Sale, User
+from .models import Produit, Carton, Vente, User
 
 class ProduitForm(forms.ModelForm):
     class Meta:
@@ -37,10 +37,15 @@ class ProduitForm(forms.ModelForm):
 
 
 
+
+from django import forms
+from .models import Carton
+
+
 class CartonForm(forms.ModelForm):
     class Meta:
         model = Carton
-        fields = ["produit", "initial_weight"]
+        fields = ["produit", "initial_weight"]  # ✅ on enlève remaining_weight
 
         widgets = {
             "produit": forms.Select(attrs={
@@ -48,22 +53,26 @@ class CartonForm(forms.ModelForm):
             }),
             "initial_weight": forms.NumberInput(attrs={
                 "class": "form-control",
-                "placeholder": "Poids initial du carton (Kg)"
+                "placeholder": "Poids initial (Kg)",
+                "step": "0.01"
             }),
         }
 
 
 
+
+
 class VenteForm(forms.ModelForm):
+
     class Meta:
-        model = Sale
+        model = Vente
         fields = [
             "produit",
             "carton",
-            "sale_type",
-            "weight_sold",
-            "unit_price",
-            "discount",
+            "type_vente",
+            "poids_vendu",
+            "prix_unitaire",
+            "reduction",
         ]
 
         widgets = {
@@ -73,26 +82,42 @@ class VenteForm(forms.ModelForm):
             "carton": forms.Select(attrs={
                 "class": "form-select"
             }),
-            "sale_type": forms.Select(attrs={
+            "type_vente": forms.Select(attrs={
                 "class": "form-select"
             }),
-            "weight_sold": forms.NumberInput(attrs={
+            "poids_vendu": forms.NumberInput(attrs={
                 "class": "form-control",
                 "placeholder": "Poids vendu (Kg)"
             }),
-            "unit_price": forms.NumberInput(attrs={
+            "prix_unitaire": forms.NumberInput(attrs={
                 "class": "form-control",
-                "placeholder": "Prix unitaire (FCFA)"
+                "readonly": True
             }),
-            "discount": forms.NumberInput(attrs={
+            "reduction": forms.NumberInput(attrs={
                 "class": "form-control",
-                "placeholder": "Réduction (FCFA)",
-                "value": 0
+                "placeholder": "Réduction"
             }),
         }
 
+    def clean(self):
+        """
+        Validation intelligente selon le type de vente
+        """
+        cleaned_data = super().clean()
 
+        type_vente = cleaned_data.get("type_vente")
+        poids_vendu = cleaned_data.get("poids_vendu")
 
+        if type_vente == "DETAIL" and not poids_vendu:
+            self.add_error(
+                "poids_vendu",
+                "Le poids est obligatoire pour une vente au détail"
+            )
+
+        if type_vente == "CARTON":
+            cleaned_data["poids_vendu"] = None
+
+        return cleaned_data
 
 class UserRegisterForm(UserCreationForm):
     class Meta:

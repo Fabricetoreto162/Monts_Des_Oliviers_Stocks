@@ -2,43 +2,90 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row text-center">
-
+<form method="get" class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-success text-white">
+        <input type="date"
+               name="date"
+               class="form-control"
+               value="{{ selected_date }}">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">
+            Filtrer
+        </button>
+    </div>
+</form>
+
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <h5>Total du jour</h5>
-                <h3>{{ total_jour }} FCFA</h3>
+                <h6>Ventes du jour</h6>
+                <h4 class="text-success">{{ total_jour }} FCFA</h4>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <h5>CA mensuel</h5>
-                <h3>{{ chiffre_affaire_mois }} FCFA</h3>
+                <h6>Chiffre d'affaire mensuel</h6>
+                <h4 class="text-primary">{{ chiffre_affaire_mois }} FCFA</h4>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card bg-warning">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <h5>Produits</h5>
-                <h3>{{ produits_count }}</h3>
+                <h6>Produits en stock</h6>
+                <h4>{{ total_produits }}</h4>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card bg-danger text-white">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <h5>Stocks faibles</h5>
-                <h3>{{ stocks_faibles.count }}</h3>
+                <h6>Cartons disponibles</h6>
+                <h4>{{ total_cartons }}</h4>
             </div>
         </div>
     </div>
-
 </div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-danger text-white">
+        Stocks faibles
+    </div>
+
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Cartons disponibles</th>
+                    <th>Seuil d'alerte</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in stocks_faibles %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td class="text-danger">{{ p.cartons_disponibles }}</td>
+                    <td>{{ p.stock_alert }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        Aucun stock faible
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}

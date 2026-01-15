@@ -1,14 +1,25 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
-from django.contrib import messages
+from django.utils import timezone
 
-from .models import Produit, Carton, Sale
+from django.db import transaction
+from django.http import JsonResponse
+
+from decimal import Decimal
+
+from .models import Vente
+from .forms import VenteForm
+from django.db.models import Sum, Count, F
+from django.db.models import  Q
+from django.contrib import messages
+from datetime import datetime
+
+from .models import Produit, Carton
 from .models import User
 from .forms import (
     ProduitForm,
     CartonForm,
-    VenteForm,
     UserRegisterForm
 )
 
@@ -19,7 +30,7 @@ def inscription(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("dashboard")
+            return redirect("connexion")
     else:
         form = UserRegisterForm()
 
@@ -49,15 +60,55 @@ def deconnexion(request):
 
 @login_required
 def dashboard(request):
-    produits = Produit.objects.count()
-    ventes = Sale.objects.count()
-    cartons = Carton.objects.count()
+    # 📅 Date sélectionnée
+    selected_date = request.GET.get("date")
 
-    return render(request, "Dashboard/index.html", {
-        "produits": produits,
-        "ventes": ventes,
-        "cartons": cartons,
-    })
+    if selected_date:
+        date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    else:
+        date = timezone.now().date()
+
+    # 🔹 VENTES DU JOUR
+    ventes_jour = Vente.objects.filter(created_at__date=date)
+    total_jour = ventes_jour.aggregate(
+        total=Sum("total_price")
+    )["total"] or 0
+
+    # 🔹 CHIFFRE D'AFFAIRE MENSUEL
+    chiffre_affaire_mois = Vente.objects.filter(
+        created_at__year=date.year,
+        created_at__month=date.month
+    ).aggregate(
+        total=Sum("total_price")
+    )["total"] or 0
+
+    # 🔹 PRODUITS DISPONIBLES
+    produits_disponibles = Produit.objects.annotate(
+    cartons_disponibles=Count(
+        "cartons",
+        filter=Q(cartons__is_sold_out=False)
+    )
+)
+
+
+    total_produits = produits_disponibles.count()
+    total_cartons = Carton.objects.filter(is_sold_out=False).count()
+
+    # 🔹 STOCKS FAIBLES
+    stocks_faibles = produits_disponibles.filter(
+        cartons_disponibles__lte=F("stock_alert")
+    )
+
+    context = {
+        "selected_date": date,
+        "total_jour": total_jour,
+        "chiffre_affaire_mois": chiffre_affaire_mois,
+        "total_produits": total_produits,
+        "total_cartons": total_cartons,
+        "stocks_faibles": stocks_faibles,
+    }
+
+    return render(request, "Dashboard/index.html", context)
 
 
 
@@ -116,28 +167,54 @@ def produits_delete(request, pk):
 
 
 
+# 🔹 LISTE + CRÉATION
 @login_required
 def cartons(request):
-    cartons = Carton.objects.filter(is_sold_out=False)
+    form = CartonForm()
 
     if request.method == "POST":
         form = CartonForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("cartons")
-    else:
-        form = CartonForm()
 
-    return render(request, "Carton/cartons.html", {
-        "cartons": cartons,
+    cartons = Carton.objects.select_related("produit")
+
+    produits_groupes = {}
+
+    for carton in cartons:
+        produit = carton.produit
+
+        if produit.id not in produits_groupes:
+            produits_groupes[produit.id] = {
+                "produit": produit,
+                "cartons": [],
+                "nombre_cartons": 0,
+                "total_weight": 0,
+                "stock_faible": False,
+            }
+
+        produits_groupes[produit.id]["cartons"].append(carton)
+        produits_groupes[produit.id]["nombre_cartons"] += 1
+        produits_groupes[produit.id]["total_weight"] += carton.remaining_weight or 0
+
+    for item in produits_groupes.values():
+        if item["nombre_cartons"] <= item["produit"].stock_alert:
+            item["stock_faible"] = True
+
+    context = {
+        "produits_groupes": produits_groupes.values(),
         "form": form,
-    })
+        "carton_edit": None,
+    }
+
+    return render(request, "Carton/cartons.html", context)
 
 
-
+# 🔹 MODIFICATION
 @login_required
-def cartons_update(request, pk):
-    carton = get_object_or_404(Carton, pk=pk)
+def cartons_update(request, id):
+    carton = get_object_or_404(Carton, id=id)
 
     if request.method == "POST":
         form = CartonForm(request.POST, instance=carton)
@@ -147,94 +224,153 @@ def cartons_update(request, pk):
     else:
         form = CartonForm(instance=carton)
 
-    return render(request, "Carton/cartons.html", {
+    cartons = Carton.objects.select_related("produit")
+
+    produits_groupes = {}
+    for c in cartons:
+        produit = c.produit
+        if produit.id not in produits_groupes:
+            produits_groupes[produit.id] = {
+                "produit": produit,
+                "cartons": [],
+                "nombre_cartons": 0,
+                "total_weight": 0,
+                "stock_faible": False,
+            }
+
+        produits_groupes[produit.id]["cartons"].append(c)
+        produits_groupes[produit.id]["nombre_cartons"] += 1
+        produits_groupes[produit.id]["total_weight"] += c.remaining_weight or 0
+
+    context = {
+        "produits_groupes": produits_groupes.values(),
         "form": form,
-        "carton": carton,
-        "cartons": Carton.objects.filter(is_sold_out=False),
-    })
+        "carton_edit": carton,
+    }
+
+    return render(request, "Carton/cartons.html", context)
 
 
-
+# 🔹 SUPPRESSION
 @login_required
-def cartons_delete(request, pk):
-    carton = get_object_or_404(Carton, pk=pk)
+def cartons_delete(request, id):
+    carton = get_object_or_404(Carton, id=id)
+    carton.delete()
+    return redirect("cartons")
 
-    if request.method == "POST":
-        carton.delete()
-        return redirect("stock_produit:cartons")
-
-    return render(request, "Carton/cartons.html", {
-        "carton": carton,
-    })
-
-
-
-
-
-
-
-@login_required
 def ventes(request):
-    ventes = Sale.objects.select_related("produit", "carton").order_by("-created_at")
+    # 📅 Date sélectionnée
+    date_str = request.GET.get("date")
+
+    if date_str:
+        selected_date = date_str
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        date_obj = timezone.now().date()
+        selected_date = date_obj.strftime("%Y-%m-%d")
+
+    # 📦 Ventes du jour sélectionné
+    ventes = Vente.objects.filter(created_at__date=date_obj).order_by("-created_at")
+
+       # 💰 Total journalier
+    total_jour = ventes.aggregate(
+        total=Sum("total_price")
+    )["total"] or Decimal("0")
+
 
     if request.method == "POST":
         form = VenteForm(request.POST)
+
         if form.is_valid():
-            sale = form.save()
+            try:
+                with transaction.atomic():
+                    vente = form.save(commit=False)
 
-            # Mise à jour du stock du carton
-            if sale.carton:
-                sale.carton.remaining_weight -= sale.weight_sold
-                sale.carton.save()
+                    # 🔒 Conversion sécurité Decimal
+                    vente.prix_unitaire = Decimal(vente.prix_unitaire)
+                    vente.reduction = Decimal(vente.reduction or 0)
 
-            return redirect("stock_produit:ventes")
+                    if vente.type_vente == "DETAIL":
+                        vente.poids_vendu = Decimal(vente.poids_vendu)
+                    else:
+                        vente.poids_vendu = None
+
+                    # 💾 Sauvegarde vente
+                    vente.save()
+
+                    # 🔄 Mise à jour stock carton
+                    vente.update_stock()
+
+                    messages.success(
+                        request,
+                        "✅ Vente enregistrée avec succès"
+                    )
+
+                    return redirect("ventes")
+
+            except ValueError as e:
+                messages.error(request, str(e))
+
+        else:
+            messages.error(request, "❌ Formulaire invalide")
+
     else:
         form = VenteForm()
 
-    return render(request, "Vente/ventes.html", {
-        "ventes": ventes,
+    context = {
         "form": form,
-    })
+        "ventes": ventes,
+        "nombre_ventes": ventes.count(),
+        "total_jour": total_jour,
+    }
+
+    return render(request, "Vente/ventes.html", context)
 
 
 
 @login_required
-def ventes_update(request, pk):
-    vente = get_object_or_404(Sale, pk=pk)
+def vente_update(request, pk):
+    sale = get_object_or_404(Vente, pk=pk)
+    form = VenteForm(instance=sale)
 
     if request.method == "POST":
-        form = VenteForm(request.POST, instance=vente)
+        form = VenteForm(request.POST, instance=sale)
         if form.is_valid():
             form.save()
-            return redirect("stock_produit:ventes")
-    else:
-        form = VenteForm(instance=vente)
+            return redirect("ventes")
 
     return render(request, "Vente/ventes.html", {
         "form": form,
-        "vente": vente,
-        "ventes": Sale.objects.all(),
+        "ventes": Vente.objects.all(),
+        "edit_mode": True,
+        "sale_id": pk
     })
 
+
+@login_required
+def vente_delete(request, pk):
+    sale = get_object_or_404(Vente, pk=pk)
+    sale.delete()
+    return redirect("ventes")
 
 
 
 @login_required
-def ventes_delete(request, pk):
-    vente = get_object_or_404(Sale, pk=pk)
+def get_prix_unitaire(request):
+    produit_id = request.GET.get("produit")
+    type_vente = request.GET.get("type")
 
-    if request.method == "POST":
-        vente.delete()
-        return redirect("stock_produit:ventes")
+    prix = 0
 
-    return render(request, "Vente/ventes.html", {
-        "vente": vente,
-    })
+    if produit_id and type_vente:
+        produit = Produit.objects.get(id=produit_id)
 
+        if type_vente == "DETAIL":
+            prix = produit.price_per_kg
+        elif type_vente == "CARTON":
+            prix = produit.carton_price
 
-
-
-
+    return JsonResponse({"prix": float(prix)})
 
 
 

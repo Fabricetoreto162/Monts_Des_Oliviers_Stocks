@@ -2,21 +2,247 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.2rem;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 10px 40px 10px 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: #f093fb;
+            box-shadow: 0 0 0 0.2rem rgba(240, 147, 251, 0.25);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        .login-link {
+            color: #f093fb;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .login-link:hover {
+            color: #f5576c;
+            text-decoration: underline;
+        }
+        /* Style pour les paragraphes générés par form.as_p */
+        form p {
+            margin-bottom: 1rem;
+            position: relative;
+            font-size: 0.9rem;
+        }
+        form label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        .helptext {
+            display: block;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.2rem;
+        }
+        .errorlist {
+            color: #f5576c;
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+            padding-left: 1rem;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            z-index: 10;
+            height: 20px;
+            width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .password-toggle:hover {
+            color: #f093fb;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-input {
+            padding-right: 40px !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .container-fluid {
+                padding: 15px;
+            }
+            .card {
+                width: 100% !important;
+                margin: 0 10px;
+            }
+            .card-header {
+                padding: 1rem;
+            }
+            .card-body {
+                padding: 1.5rem !important;
+            }
+            h4 {
+                font-size: 1.3rem !important;
+            }
+            form p {
+                font-size: 0.85rem;
+            }
+            form label {
+                font-size: 0.9rem;
+            }
+            .form-control {
+                padding: 10px 40px 10px 12px;
+                font-size: 16px; /* Empêche le zoom sur iOS */
+            }
+            .btn-success {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (min-width: 577px) and (max-width: 768px) {
+            .card {
+                width: 90% !important;
+                max-width: 420px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .card-body {
+                padding: 1.2rem !important;
+            }
+            form p {
+                margin-bottom: 0.8rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light d-flex justify-content-center align-items-center vh-100">
+<body class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container-fluid d-flex justify-content-center align-items-center">
+        <div class="card shadow-lg" style="width: 420px;">
+            <div class="card-header text-center">
+                <h4 class="mb-0 fw-bold" style="font-size: 1.4rem;">Créer un compte</h4>
+                <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Monts des oliviers </p>
+            </div>
+            
+            <div class="card-body p-3">
+                <form method="post" id="inscriptionForm">
+                    {% csrf_token %}
+                    
+                    {{ form.as_p }}
 
-<div class="card p-4 shadow" style="width: 450px;">
-    <h4 class="text-center mb-3">Inscription</h4>
+                    <button class="btn btn-success w-100 mb-3">Créer le compte</button>
+                    
+                    <div class="text-center pt-3 border-top">
+                        <p class="mb-0" style="font-size: 0.9rem;">Déjà un compte ? 
+                            <a href="{% url 'connexion' %}" class="login-link">Se connecter</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button class="btn btn-success w-100">Créer le compte</button>
-    </form>
-</div>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Trouver tous les champs de mot de passe dans le formulaire
+        const passwordFields = document.querySelectorAll('input[type="password"]');
+        
+        passwordFields.forEach(function(passwordField, index) {
+            // Trouver le parent p
+            const parentP = passwordField.closest('p');
+            
+            if (parentP) {
+                // Créer un wrapper pour le champ
+                const wrapper = document.createElement('div');
+                wrapper.className = 'password-wrapper';
+                
+                // Insérer le wrapper avant le champ
+                parentP.insertBefore(wrapper, passwordField);
+                wrapper.appendChild(passwordField);
+                
+                // Ajouter la classe pour l'espace de l'icône
+                passwordField.classList.add('form-control', 'password-input');
+                
+                // Créer le bouton toggle
+                const toggleButton = document.createElement('button');
+                toggleButton.type = 'button';
+                toggleButton.className = 'password-toggle';
+                toggleButton.innerHTML = '<i class="bi bi-eye"></i>';
+                
+                wrapper.appendChild(toggleButton);
+                
+                // Ajouter l'événement click
+                toggleButton.addEventListener('click', function() {
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+                    
+                    const icon = this.querySelector('i');
+                    if (type === 'password') {
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            }
+        });
+        
+        // Éviter le zoom automatique sur iOS
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                if (this.type === 'email' || this.type === 'password' || this.type === 'text') {
+                    this.style.fontSize = '16px';
+                }
+            });
+            input.addEventListener('blur', function() {
+                this.style.fontSize = '';
+            });
+        });
+    });
+</script>
 </body>
 </html>
