@@ -10,13 +10,13 @@ class Carton(models.Model):
         on_delete=models.CASCADE
     )
 
-    # ✅ POIDS INITIAL (Decimal)
+
     initial_weight = models.DecimalField(
         max_digits=10,
         decimal_places=2
     )
 
-    # ✅ POIDS RESTANT (Decimal)
+
     remaining_weight = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -26,12 +26,13 @@ class Carton(models.Model):
     is_sold_out = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
     def save(self, *args, **kwargs):
-        # Initialisation automatique à la création
+
         if self.pk is None:
             self.remaining_weight = self.initial_weight
+            
 
-        # Mise à jour état stock
         self.is_sold_out = self.remaining_weight <= Decimal("0")
 
         super().save(*args, **kwargs)

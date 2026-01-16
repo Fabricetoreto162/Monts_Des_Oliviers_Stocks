@@ -1,19 +1,40 @@
 from django.db import models
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 from .produit import Produit
 from .carton import Carton
+from .recu import Recu
 
 
 class Vente(models.Model):
-
+    created_at = models.DateTimeField(null=True, blank=True)
     TYPE_VENTE_CHOICES = (
         ("DETAIL", "Détail (Kg)"),
         ("CARTON", "Carton entier"),
     )
 
-    produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
-    carton = models.ForeignKey(Carton, on_delete=models.CASCADE)
-    type_vente = models.CharField(max_length=10, choices=TYPE_VENTE_CHOICES)
+    recu = models.ForeignKey(
+        Recu,
+        related_name="ventes",
+        on_delete=models.CASCADE
+    )
+
+    produit = models.ForeignKey(
+        Produit,
+        on_delete=models.PROTECT
+    )
+
+    carton = models.ForeignKey(
+        Carton,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True
+    )
+
+    type_vente = models.CharField(
+        max_length=10,
+        choices=TYPE_VENTE_CHOICES
+    )
 
     poids_vendu = models.DecimalField(
         max_digits=10,
@@ -22,65 +43,85 @@ class Vente(models.Model):
         blank=True
     )
 
-    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
-    reduction = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    prix_unitaire = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
 
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
+    reduction = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
 
-    def update_stock(self):
-        """
-        Met à jour le stock du carton selon le type de vente
-        """
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    
+
+    # ✅ VALIDATION MÉTIER
+    def clean(self):
+        if not self.carton:
+            raise ValidationError({"carton": "Un carton est obligatoire."})
+
+        if self.type_vente == "DETAIL" and not self.poids_vendu:
+            raise ValidationError({"poids_vendu": "Poids requis pour une vente au détail."})
+
+    # 💰 CALCUL DU TOTAL
+    def save(self, *args, **kwargs):
+        prix = Decimal(self.prix_unitaire or 0)
+        reduction = Decimal(self.reduction or 0)
 
         if self.type_vente == "DETAIL":
-            poids = Decimal(self.poids_vendu)
-
-        elif self.type_vente == "CARTON":
-            poids = Decimal(self.carton.remaining_weight)
-
+            poids = Decimal(self.poids_vendu or 0)
+            self.total_price = (poids * prix) - reduction
         else:
-            return
+            self.total_price = prix - reduction
 
-        # 🔴 Sécurité : éviter stock négatif
-        if poids > self.carton.remaining_weight:
-            raise ValueError("Poids vendu supérieur au stock disponible")
+        if self.total_price < 0:
+            self.total_price = Decimal("0")
 
-        # ✅ Mise à jour du stock
-        self.carton.remaining_weight -= poids
+        super().save(*args, **kwargs)
 
+    # 📦 DÉDUCTION DU STOCK
+
+    def update_stock(self):
+        if not self.carton:
+            raise ValidationError("Carton manquant pour la vente")
+
+        # 🔹 Vente au détail (kg)
+        if self.type_vente == "DETAIL":
+            poids = Decimal(self.poids_vendu or 0)
+
+            if poids <= 0:
+                raise ValidationError("Poids invalide")
+
+            if poids > self.carton.remaining_weight:
+                raise ValidationError("Stock insuffisant dans le carton")
+
+            self.carton.remaining_weight -= poids
+
+        # 🔹 Vente carton entier
+        else:
+            self.carton.remaining_weight = Decimal("0")
+
+        # 🔒 Sécurité
         if self.carton.remaining_weight <= 0:
             self.carton.remaining_weight = Decimal("0")
             self.carton.is_sold_out = True
 
         self.carton.save()
 
-    def save(self, *args, **kwargs):
-        # Calcul automatique du total
-        if self.type_vente == "DETAIL":
-            self.total_price = (
-                self.poids_vendu * self.prix_unitaire
-            ) - self.reduction
-        else:
-            self.total_price = self.prix_unitaire - self.reduction
-
-        super().save(*args, **kwargs)
-
-
-
+    # 🔄 RESTAURATION DU STOCK
     def restore_stock(self):
-        """
-        Restaure le stock du carton lors de la suppression d'une vente
-        """
-
         if self.type_vente == "DETAIL":
             poids = Decimal(self.poids_vendu)
-        elif self.type_vente == "CARTON":
-            poids = Decimal(self.carton.remaining_weight)
         else:
-            return
+            poids = Decimal(self.carton.remaining_weight)
 
         self.carton.remaining_weight += poids
         self.carton.is_sold_out = False
         self.carton.save()
-

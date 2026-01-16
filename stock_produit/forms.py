@@ -38,8 +38,6 @@ class ProduitForm(forms.ModelForm):
 
 
 
-from django import forms
-from .models import Carton
 
 
 class CartonForm(forms.ModelForm):
@@ -60,8 +58,6 @@ class CartonForm(forms.ModelForm):
 
 
 
-
-
 class VenteForm(forms.ModelForm):
 
     class Meta:
@@ -76,48 +72,29 @@ class VenteForm(forms.ModelForm):
         ]
 
         widgets = {
-            "produit": forms.Select(attrs={
-                "class": "form-select"
-            }),
-            "carton": forms.Select(attrs={
-                "class": "form-select"
-            }),
-            "type_vente": forms.Select(attrs={
-                "class": "form-select"
-            }),
-            "poids_vendu": forms.NumberInput(attrs={
-                "class": "form-control",
-                "placeholder": "Poids vendu (Kg)"
-            }),
+            "produit": forms.Select(attrs={"class": "form-select"}),
+            "carton": forms.Select(attrs={"class": "form-select"}),
+            "type_vente": forms.Select(attrs={"class": "form-select"}),
+            "poids_vendu": forms.NumberInput(attrs={"class": "form-control"}),
             "prix_unitaire": forms.NumberInput(attrs={
                 "class": "form-control",
                 "readonly": True
             }),
-            "reduction": forms.NumberInput(attrs={
-                "class": "form-control",
-                "placeholder": "Réduction"
-            }),
+            "reduction": forms.NumberInput(attrs={"class": "form-control"}),
         }
 
-    def clean(self):
-        """
-        Validation intelligente selon le type de vente
-        """
-        cleaned_data = super().clean()
 
-        type_vente = cleaned_data.get("type_vente")
-        poids_vendu = cleaned_data.get("poids_vendu")
 
-        if type_vente == "DETAIL" and not poids_vendu:
-            self.add_error(
-                "poids_vendu",
-                "Le poids est obligatoire pour une vente au détail"
-            )
 
-        if type_vente == "CARTON":
-            cleaned_data["poids_vendu"] = None
 
-        return cleaned_data
+
+
+
+
+
+
+
+
 
 class UserRegisterForm(UserCreationForm):
     class Meta:

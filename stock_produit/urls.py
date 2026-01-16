@@ -23,11 +23,33 @@ urlpatterns = [
     path("cartons/update/<int:id>/", views.cartons_update, name="cartons_update"),
     path("cartons/delete/<int:id>/", views.cartons_delete, name="cartons_delete"),
    
-    # ================= VENTES =================
+     # ======================
+    # PAGE PRINCIPALE VENTES
+    # ======================
     path("ventes/", views.ventes, name="ventes"),
-    path("ventes/<int:pk>/update/", views.vente_update, name="vente_update"),
-    path("ventes/<int:pk>/delete/", views.vente_delete, name="vente_delete"),
+
+    # ======================
+    # AJAX / PANIER
+    # ======================
+    path("ajax/ajouter-panier/", views.ajouter_au_panier, name="ajouter_au_panier"),
     path("ajax/prix/", views.get_prix_unitaire, name="get_prix_unitaire"),
+
+    # ======================
+    # ACTIONS PANIER
+    # ======================
+    path("panier/valider/", views.valider_panier, name="valider_panier"),
+    path("panier/vider/", views.vider_panier, name="vider_panier"),
+
+    # ======================
+    # REÇUS & VENTES
+    # ======================
+    path("recu/<int:recu_id>/", views.ventes, name="detail_recu"),
+  
+
+    # ================== AJAX ==================
+    path("ajax/prix/", views.get_prix_unitaire, name="get_prix_unitaire"),
+
+
     # ================= UTILISATEURS =================
     path("utilisateurs/", views.user_list, name="users"),
 

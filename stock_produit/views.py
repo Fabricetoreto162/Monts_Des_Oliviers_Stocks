@@ -1,21 +1,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required 
 from django.contrib.auth import login, logout, authenticate
+from django.views.decorators.http import require_POST
 from django.utils import timezone
-
+import json
 from django.db import transaction
 from django.http import JsonResponse
+from django.utils.timezone import now
+
+
+
 
 from decimal import Decimal
 
-from .models import Vente
+from .models import Vente, Recu
+def generer_numero_recu():
+        date_str = now().strftime("%Y%m%d")
+        count = Recu.objects.filter(numero__startswith=date_str).count() + 1
+        return f"{date_str}-{count:04d}"
+
 from .forms import VenteForm
 from django.db.models import Sum, Count, F
 from django.db.models import  Q
 from django.contrib import messages
 from datetime import datetime
 
-from .models import Produit, Carton, Vente
+
+from .models import Produit, Carton, Vente,Recu
 from .models import User
 from .forms import (
     ProduitForm,
@@ -24,13 +35,14 @@ from .forms import (
 )
 
 
+
 def inscription(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("connexion")
+            return redirect("dashboard")
     else:
         form = UserRegisterForm()
 
@@ -60,6 +72,8 @@ def deconnexion(request):
 
 @login_required
 def dashboard(request):
+
+    
     # 📅 Date sélectionnée
     selected_date = request.GET.get("date")
 
@@ -69,18 +83,19 @@ def dashboard(request):
         date = timezone.now().date()
 
     # 🔹 VENTES DU JOUR
-    ventes_jour = Vente.objects.filter(created_at__date=date)
+    ventes_jour = Vente.objects.filter(recu__created_at__date=date)
+
     total_jour = ventes_jour.aggregate(
         total=Sum("total_price")
     )["total"] or 0
 
     # 🔹 CHIFFRE D'AFFAIRE MENSUEL
     chiffre_affaire_mois = Vente.objects.filter(
-        created_at__year=date.year,
-        created_at__month=date.month
+        recu__created_at__year=date.year,
+        recu__created_at__month=date.month
     ).aggregate(
         total=Sum("total_price")
-    )["total"] or 0
+    )["total"] or Decimal("0")
 
     # 🔹 PRODUITS DISPONIBLES
     produits_disponibles = Produit.objects.annotate(
@@ -261,105 +276,203 @@ def cartons_delete(request, id):
 
 
 
-def ventes(request):
-    # 📅 Date sélectionnée
+@login_required
+def ventes(request, recu_id=None):
+
+    # ================== MODE DÉTAIL REÇU ==================
+    if recu_id:
+        recu = get_object_or_404(
+            Recu.objects.prefetch_related("ventes"),
+            pk=recu_id
+        )
+
+        context = {
+            "recu": recu,
+            "form": VenteForm(),
+            "panier": [],
+            "recus": [],
+            "total_jour": Decimal("0"),
+            "selected_date": None,
+            "detail_recu": True,
+        }
+
+        return render(request, "Vente/ventes.html", context)
+
+    # ================== MODE CAISSE (NORMAL) ==================
     date_str = request.GET.get("date")
 
     if date_str:
-        selected_date = date_str
         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
     else:
         date_obj = timezone.now().date()
-        selected_date = date_obj.strftime("%Y-%m-%d")
 
-    # 📦 Ventes du jour sélectionné
-    ventes = Vente.objects.filter(created_at__date=date_obj).order_by("-created_at")
+    selected_date = date_obj.strftime("%Y-%m-%d")
 
-       # 💰 Total journalier
-    total_jour = ventes.aggregate(
-        total=Sum("total_price")
+    # 🔹 Reçus du jour
+    recus = Recu.objects.filter(
+        created_at__date=date_obj
+    ).prefetch_related("ventes").order_by("-id")
+
+    # 🔹 Total journalier
+    total_jour = recus.aggregate(
+        total=Sum("total")
     )["total"] or Decimal("0")
 
-
-    if request.method == "POST":
-        form = VenteForm(request.POST)
-
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    vente = form.save(commit=False)
-
-                    # 🔒 Conversion sécurité Decimal
-                    vente.prix_unitaire = Decimal(vente.prix_unitaire)
-                    vente.reduction = Decimal(vente.reduction or 0)
-
-                    if vente.type_vente == "DETAIL":
-                        vente.poids_vendu = Decimal(vente.poids_vendu)
-                    else:
-                        vente.poids_vendu = None
-
-                    # 💾 Sauvegarde vente
-                    vente.save()
-
-                    # 🔄 Mise à jour stock carton
-                    vente.update_stock()
-
-                    messages.success(
-                        request,
-                        "✅ Vente enregistrée avec succès"
-                    )
-
-                    return redirect("ventes")
-
-            except ValueError as e:
-                messages.error(request, str(e))
-
-        else:
-            messages.error(request, "❌ Formulaire invalide")
-
-    else:
-        form = VenteForm()
-
     context = {
-        "form": form,
-        "ventes": ventes,
-        "nombre_ventes": ventes.count(),
+        "form": VenteForm(),
+        "panier": request.session.get("panier", []),
+        "recus": recus,
         "total_jour": total_jour,
-        "selected_date": selected_date, 
+        "selected_date": selected_date,
+        "detail_recu": False,
     }
 
     return render(request, "Vente/ventes.html", context)
 
 
 
-@login_required
-def vente_update(request, pk):
-    sale = get_object_or_404(Vente, pk=pk)
-    form = VenteForm(instance=sale)
 
-    if request.method == "POST":
-        form = VenteForm(request.POST, instance=sale)
-        if form.is_valid():
-            form.save()
-            return redirect("ventes")
+
+@login_required
+def detail_recu(request, recu_id):
+    recu = get_object_or_404(
+        Recu.objects.prefetch_related("detail_recu"),
+        id=recu_id
+    )
 
     return render(request, "Vente/ventes.html", {
-        "form": form,
-        "ventes": Vente.objects.all(),
-        "edit_mode": True,
-        "sale_id": pk
+        "recu": recu
     })
 
 
 @login_required
-def vente_delete(request, pk):
-    sale = get_object_or_404(Vente, pk=pk)
+@require_POST
+def ajouter_au_panier(request):
+    try:
+        data = json.loads(request.body)
 
-    with transaction.atomic():
-        sale.restore_stock()   # 🔁 RESTAURATION
-        sale.delete()          # ❌ SUPPRESSION
+        produit = Produit.objects.get(id=data["produit_id"])
+        carton = Carton.objects.get(id=data["carton_id"])
 
+        poids = Decimal(data["poids_vendu"]) if data.get("poids_vendu") else Decimal("1")
+        prix = Decimal(data["prix_unitaire"])
+        reduction = Decimal(data.get("reduction", 0))
+
+        total = (poids * prix) - reduction
+
+        panier = request.session.get("panier", [])
+
+        panier.append({
+            "produit_id": produit.id,
+            "produit_nom": produit.name,
+            "carton_id": carton.id,
+            "type_vente": data["type_vente"],
+            "poids_vendu": data.get("poids_vendu"),
+            "prix_unitaire": str(prix),
+            "reduction": str(reduction),
+            "total_price": str(total),
+        })
+
+        request.session["panier"] = panier
+        request.session.modified = True
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+
+
+@login_required
+@transaction.atomic
+def valider_panier(request):
+        panier = request.session.get("panier", [])
+
+        # 1️⃣ PANIER VIDE
+        if not panier:
+            messages.error(request, "Le panier est vide.")
+            return redirect("ventes")
+
+        # 2️⃣ CRÉATION DU REÇU
+        recu = Recu.objects.create(
+            numero=generer_numero_recu(),
+            total=Decimal("0")
+        )
+
+        total_recu = Decimal("0")
+
+        # 3️⃣ TRAITEMENT DE CHAQUE LIGNE DU PANIER
+        for index, item in enumerate(panier, start=1):
+
+            # 🔐 SÉCURISATION DES DONNÉES
+            produit_id = item.get("produit_id")
+            carton_id = item.get("carton_id")
+            type_vente = item.get("type_vente")
+
+            if not produit_id or not carton_id or not type_vente:
+                messages.error(
+                    request,
+                    f"Ligne {index} invalide dans le panier (données manquantes)."
+                )
+                raise Exception("Panier invalide")
+
+            produit = Produit.objects.get(id=produit_id)
+            carton = Carton.objects.get(id=carton_id)
+
+            # ⚖️ POIDS SELON TYPE DE VENTE
+            if type_vente == "DETAIL":
+                poids_brut = item.get("poids_vendu")
+                if not poids_brut:
+                    messages.error(
+                        request,
+                        f"Poids manquant pour la vente au détail (ligne {index})."
+                    )
+                    raise Exception("Poids manquant")
+
+                poids_vendu = Decimal(poids_brut)
+            else:
+                poids_vendu = None
+
+            # 💰 PRIX & RÉDUCTION
+            prix_unitaire = Decimal(item.get("prix_unitaire", 0))
+            reduction = Decimal(item.get("reduction", 0))
+
+            # 4️⃣ CRÉATION DE LA VENTE
+            vente = Vente.objects.create(
+                recu=recu,
+                produit=produit,
+                carton=carton,
+                type_vente=type_vente,
+                poids_vendu=poids_vendu,
+                prix_unitaire=prix_unitaire,
+                reduction=reduction,
+            )
+
+            # 5️⃣ MISE À JOUR DU STOCK
+            vente.update_stock()
+
+            total_recu += vente.total_price
+
+        # 6️⃣ TOTAL DU REÇU
+        recu.total = total_recu
+        recu.save()
+
+        # 7️⃣ VIDAGE DU PANIER
+        request.session["panier"] = []
+        request.session.modified = True
+
+        messages.success(request, "Vente enregistrée avec succès.")
+        return redirect("detail_recu", recu_id=recu.id)
+
+@login_required
+def vider_panier(request):
+    request.session["panier"] = []
+    request.session.modified = True
+    messages.success(request, "🗑️ Panier vidé")
     return redirect("ventes")
+
+
+
+
 
 
 
@@ -379,6 +492,8 @@ def get_prix_unitaire(request):
             prix = produit.carton_price
 
     return JsonResponse({"prix": float(prix)})
+
+
 
 
 
