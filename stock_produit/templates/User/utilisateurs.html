@@ -2,24 +2,301 @@
 {% block title %}Utilisateurs{% endblock %}
 
 {% block content %}
-<h3>Utilisateurs</h3>
+<div class="users-container">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="page-title">
+                <i class="bi bi-people me-2"></i>Gestion des Utilisateurs
+            </h1>
+            <p class="text-muted">Liste de tous les utilisateurs du système</p>
+        </div>
+       
+    </div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Type</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for u in users %}
-        <tr>
-            <td>{{ u.email }}</td>
-            <td>{{ u.user_type }}</td>
-            <td>{{ u.date_joined|date:"d/m/Y" }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <!-- Carte principale -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-gradient-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-list-ul me-2"></i>
+                    <span class="h5 mb-0">Liste des Utilisateurs</span>
+                </div>
+                <span class="badge bg-light text-dark">
+                    {{ users|length }} utilisateur{{ users|length|pluralize }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">
+                                <i class="bi bi-envelope me-2"></i>Email
+                            </th>
+                            <th>
+                                <i class="bi bi-person-badge me-2"></i>Type
+                            </th>
+                            <th>
+                                <i class="bi bi-calendar me-2"></i>Date d'inscription
+                            </th>
+                            <th>
+                                <i class="bi bi-clock-history me-2"></i>Dernière connexion
+                            </th>
+                            <th class="text-end pe-4">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr class="user-row align-middle">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        <i class="bi bi-person-circle"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ u.email }}</strong>
+                                        <br>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% with user_type=u.user_type %}
+                                <span class="badge 
+                                    {% if user_type == 'ADMIN' %}bg-danger
+                                    {% elif user_type == 'CAISSE' %}bg-success
+                                    {% elif user_type == 'MANAGER' %}bg-primary
+                                    {% else %}bg-secondary{% endif %} py-2 px-3">
+                                    <i class="bi 
+                                        {% if user_type == 'ADMIN' %}bi-shield-check
+                                        {% elif user_type == 'CAISSE' %}bi-cash-coin
+                                        {% elif user_type == 'MANAGER' %}bi-gear
+                                        {% else %}bi-person{% endif %} me-1">
+                                    </i>
+                                    {{ user_type|default:"UTILISATEUR" }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold">{{ u.date_joined|date:"d/m/Y" }}</span>
+                                    <small class="text-muted">{{ u.date_joined|time:"H:i" }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if u.last_login %}
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold">{{ u.last_login|date:"d/m/Y" }}</span>
+                                    <small class="text-muted">{{ u.last_login|time:"H:i" }}</small>
+                                </div>
+                                {% else %}
+                                <span class="text-muted fst-italic">Jamais connecté</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                {% if u.is_active %}
+                                <span class="badge bg-success py-2 px-3">
+                                    <i class="bi bi-check-circle me-1"></i>Actif
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger py-2 px-3">
+                                    <i class="bi bi-x-circle me-1"></i>Inactif
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-people display-4 mb-3"></i>
+                                    <p class="h5">Aucun utilisateur trouvé</p>
+                                    <p class="small">Commencez par ajouter un nouvel utilisateur</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer avec légende -->
+        <div class="card-footer bg-light">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-danger me-2">
+                            <i class="bi bi-shield-check me-1"></i>Administrateur
+                        </span>
+                        <span class="badge bg-success me-2">
+                            <i class="bi bi-cash-coin me-1"></i>Caissier
+                        </span>
+                       
+                </div>
+              
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.users-container {
+    padding: 1.5rem;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+/* En-tête de carte */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    border-radius: 15px 15px 0 0 !important;
+    padding: 1.25rem 1.5rem;
+}
+
+/* Avatar utilisateur */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+/* Ligne du tableau */
+.user-row {
+    transition: all 0.2s;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.user-row:hover {
+    background-color: rgba(106, 17, 203, 0.05) !important;
+    border-left-color: #6a11cb;
+    transform: translateX(2px);
+}
+
+/* Badges */
+.badge {
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.85em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .users-container {
+        padding: 1rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .row.mb-4 {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .text-md-end {
+        text-align: left !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .card-footer .row {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .card-footer .d-flex {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .user-row td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .badge {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75em;
+    }
+}
+
+/* Animation */
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-row {
+    animation: fadeInRow 0.3s ease-out;
+}
+
+.user-row:nth-child(1) { animation-delay: 0.1s; }
+.user-row:nth-child(2) { animation-delay: 0.2s; }
+.user-row:nth-child(3) { animation-delay: 0.3s; }
+.user-row:nth-child(4) { animation-delay: 0.4s; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Rendre les lignes cliquables
+    const userRows = document.querySelectorAll('.user-row');
+    
+    userRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const email = this.querySelector('strong').textContent;
+            alert(`Détails de l'utilisateur : ${email}\n\nFonctionnalité à implémenter.`);
+        });
+        
+        // Effet visuel au survol
+        row.addEventListener('mouseenter', function() {
+            this.style.boxShadow = '0 4px 12px rgba(106, 17, 203, 0.1)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    
+    }
+}
+);
+
+
+</script>
 {% endblock %}

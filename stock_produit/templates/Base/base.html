@@ -497,7 +497,15 @@
                     <i class="fas fa-user"></i>
                 </div>
                 <div>
-                    <div class="user-name">{{ user.username|default:"Administrateur" }}</div>
+
+                    {% if request.user.is_authenticated %}
+                    <div class="user-name">{{ request.user.user_type }}</div>
+                    <span>{{ request.user.email }}</span>
+                    
+                       
+                    {% endif %}
+
+                    
                     
                 </div>
             </div>
