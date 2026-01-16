@@ -65,3 +65,22 @@ class Vente(models.Model):
             self.total_price = self.prix_unitaire - self.reduction
 
         super().save(*args, **kwargs)
+
+
+
+    def restore_stock(self):
+        """
+        Restaure le stock du carton lors de la suppression d'une vente
+        """
+
+        if self.type_vente == "DETAIL":
+            poids = Decimal(self.poids_vendu)
+        elif self.type_vente == "CARTON":
+            poids = Decimal(self.carton.remaining_weight)
+        else:
+            return
+
+        self.carton.remaining_weight += poids
+        self.carton.is_sold_out = False
+        self.carton.save()
+

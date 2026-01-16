@@ -1,267 +1,693 @@
 {% extends "Base/base.html" %}
 
 {% block title %}Ventes - Monts des Oliviers{% endblock %}
-{% block page_title %}Gestion des ventes{% endblock %}
-{% block page_subtitle %}Système de vente basé sur le poids{% endblock %}
+{% block page_title %}Gestion des Ventes{% endblock %}
+{% block page_subtitle %}Enregistrement et suivi des ventes{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- ================= FILTRE DATE ================= -->
-<form method="get" class="row mb-3 align-items-end">
-    <div class="col-md-3">
-        <label class="form-label fw-bold">📅 Date des ventes</label>
-        <input type="date"
-               name="date"
-               value="{{ selected_date }}"
-               class="form-control"
-               onchange="this.form.submit()">
-    </div>
+<style>
+    /* Styles généraux améliorés */
+    .container-fluid {
+        padding: 0 15px;
+    }
+    
+    /* Amélioration des cartes */
+    .card {
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 20px;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* En-têtes de cartes */
+    .card-body h5 {
+        color: #2c3e50;
+        font-weight: 600;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    /* Formulaires améliorés */
+    .form-control {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 12px;
+        transition: all 0.3s;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #34495e;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+    }
+    
+    /* Boutons améliorés */
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 10px 20px;
+        transition: all 0.3s;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #2980b9, #1c6ea4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        box-shadow: 0 2px 4px rgba(149, 165, 166, 0.3);
+    }
+    
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
+        transform: translateY(-1px);
+    }
+    
+    .btn-sm {
+        padding: 5px 12px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        box-shadow: 0 2px 4px rgba(46, 204, 113, 0.3);
+    }
+    
+    /* Table améliorée */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table-dark {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        border: none;
+    }
+    
+    .table-dark th {
+        border: none;
+        padding: 15px 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(52, 152, 219, 0.05);
+    }
+    
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #eee;
+        padding: 12px;
+        vertical-align: middle;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.2s;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1) !important;
+    }
+    
+    /* Alertes améliorées */
+    .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        font-weight: 500;
+    }
+    
+    /* Total amélioré */
+    .text-success {
+        color: #27ae60 !important;
+        font-weight: 600;
+    }
+    
+    #total_affiche {
+        background: #f8f9fa;
+        border: 2px dashed #27ae60;
+        font-size: 1.2rem;
+        color: #27ae60;
+        font-weight: 600;
+        text-align: center;
+        padding: 12px;
+    }
+    
+    /* Filtres améliorés */
+    .row.g-2.align-items-end.mb-3 {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px !important;
+        border: 1px solid #e9ecef;
+    }
+    
+    /* Icônes dans les boutons */
+    .btn i, .btn:before {
+        margin-right: 5px;
+    }
+    
+    /* Responsive pour formulaire en ligne */
+    .form-row-horizontal {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: flex-end;
+    }
+    
+    .form-field-horizontal {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .form-field-horizontal-full {
+        flex: 2;
+        min-width: 200px;
+    }
+    
+    /* Header amélioré */
+    .d-flex.justify-content-between.align-items-center.mb-3 {
+        padding: 15px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        margin-bottom: 20px !important;
+        border-left: 4px solid #3498db;
+    }
+    
+    /* Animation pour les nouveaux enregistrements */
+    @keyframes highlight {
+        0% { background-color: rgba(46, 204, 113, 0.3); }
+        100% { background-color: transparent; }
+    }
+    
+    .new-sale {
+        animation: highlight 2s ease-out;
+    }
+    
+    /* Style pour les cellules vides */
+    .text-center {
+        color: #95a5a6;
+        font-style: italic;
+    }
+    
+    /* Espacement amélioré */
+    .mb-2, .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mb-3:last-child {
+        margin-bottom: 0 !important;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 992px) {
+        .form-row-horizontal {
+            gap: 10px;
+        }
+        
+        .form-field-horizontal, 
+        .form-field-horizontal-full {
+            min-width: 120px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .form-row-horizontal {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-field-horizontal, 
+        .form-field-horizontal-full {
+            width: 100%;
+            min-width: 100%;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .table-dark th,
+        .table-bordered th, 
+        .table-bordered td {
+            padding: 8px 6px;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-3 {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+        
+        .row.g-2.align-items-end.mb-3 {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .container-fluid {
+            padding: 0 10px;
+        }
+        
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        
+        #total_affiche {
+            font-size: 1rem;
+            padding: 8px;
+        }
+        
+        .card {
+            margin-bottom: 15px;
+        }
+    }
+    
+    /* Style pour le bouton d'enregistrement dans le formulaire horizontal */
+    .btn-submit-horizontal {
+        height: fit-content;
+        align-self: center;
+        margin-left: 10px;
+    }
+</style>
 
-    <div class="col-md-3">
-        <label class="form-label fw-bold">Total journalier</label>
-        <input type="text"
-               class="form-control fw-bold text-success"
-               value="{{ total_jour }} FCFA"
-               readonly>
-    </div>
-</form>
+<div class="container-fluid">
 
+    <!-- 🔔 Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
-    <!-- ================= HEADER ================= -->
-    <div class="d-flex justify-content-between mb-3">
-        <h4>📦 Gestion des ventes</h4>
-        <div class="fw-bold text-success">
-            Total du jour : {{ total_jour }} FCFA
-        </div>
-    </div>
-
+    <!-- ================= FILTRES ================= -->
     <div class="row">
-
-        <!-- ================= FORMULAIRE ================= -->
-        <div class="col-md-4">
-            <div class="card shadow p-3">
-
-                <h6 class="mb-3">
-                    {% if edit_mode %}✏️ Modifier la vente{% else %}➕ Nouvelle vente{% endif %}
-                </h6>
-
-                <form method="post" id="saleForm">
-                    {% csrf_token %}
-
-                    <div class="mb-2">
-                        {{ form.produit.label_tag }}
-                        {{ form.produit }}
-                    </div>
-
-                    <div class="mb-2">
-                        {{ form.carton.label_tag }}
-                        {{ form.carton }}
-                    </div>
-
-                    <div class="mb-2">
-                        {{ form.type_vente.label_tag }}
-                        {{ form.type_vente }}
-                    </div>
-
-                    <div class="mb-2" id="poids-block">
-                        {{ form.poids_vendu.label_tag }}
-                        {{ form.poids_vendu }}
-                    </div>
-
-                    <div class="mb-2">
-                        {{ form.prix_unitaire.label_tag }}
-                        {{ form.prix_unitaire }}
-                    </div>
-
-                    <div class="mb-2">
-                        {{ form.reduction.label_tag }}
-                        {{ form.reduction }}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Total</label>
-                        <input type="text"
-                               id="totalPreview"
-                               class="form-control fw-bold text-success"
-                               readonly>
-                    </div>
-
-                    <button class="btn btn-primary w-100">
-                        💾 Enregistrer
-                    </button>
-
-                    {% if edit_mode %}
-                    <a href="{% url 'ventes' %}"
-                       class="btn btn-secondary w-100 mt-2">
-                        Annuler
-                    </a>
-                    {% endif %}
-                </form>
-
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">📅 Date</label>
+                <input type="date"
+                       name="date"
+                       class="form-control"
+                       value="{{ selected_date }}">
             </div>
-        </div>
 
-        <!-- ================= TABLE ================= -->
-        <div class="col-md-8">
-            <div class="card shadow p-3">
-
-                <h6 class="mb-3">📋 Liste des ventes</h6>
-
-                <table class="table table-bordered table-sm">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Date</th>
-                            <th>Produit</th>
-                            <th>Type</th>
-                            <th>Poids</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        {% for v in ventes %}
-                        <tr>
-                            <td>{{ v.created_at|date:"d/m/Y H:i" }}</td>
-                            <td>{{ v.produit.name }}</td>
-                            <td>{{ v.get_type_vente_display }}</td>
-                            <td>
-                                {% if v.type_vente == "DETAIL" %}
-                                    {{ v.poids_vendu }} kg
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold text-success">
-                                {{ v.total_price }} FCFA
-                            </td>
-                            <td>
-                                <a href="{% url 'vente_modifier' v.id %}"
-                                   class="btn btn-warning btn-sm">✏️</a>
-
-                                <a href="{% url 'vente_supprimer' v.id %}"
-                                   class="btn btn-danger btn-sm"
-                                   onclick="return confirm('Supprimer cette vente ?')">
-                                   🗑
-                                </a>
-
-                                <button class="btn btn-secondary btn-sm"
-                                        onclick="imprimerRecu(
-                                            '{{ v.created_at|date:"d/m/Y H:i" }}',
-                                            '{{ v.produit.name }}',
-                                            '{{ v.get_type_vente_display }}',
-                                            '{{ v.poids_vendu|default:"" }}',
-                                            '{{ v.prix_unitaire }}',
-                                            '{{ v.reduction }}',
-                                            '{{ v.total_price }}'
-                                        )">
-                                    🧾
-                                </button>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Aucune vente enregistrée
-                            </td>
-                        </tr>
-                        {% endfor %}
-
-                    </tbody>
-                </table>
-
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    🔍 Filtrer
+                </button>
             </div>
-        </div>
 
+            <div class="col-md-3">
+                <a href="{% url 'ventes' %}" class="btn btn-secondary w-100">
+                    ⏪ Aujourd'hui
+                </a>
+            </div>
+        </form>
     </div>
+
+    <!-- ================= FORMULAIRE EN LIGNE ================= -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        {% if edit_mode %}
+                            ✏️ Modifier la vente
+                        {% else %}
+                            ➕ Nouvelle vente
+                        {% endif %}
+                    </h5>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-row-horizontal">
+                            <!-- Produit -->
+                            <div class="form-field-horizontal">
+                                {{ form.produit.label_tag }}
+                                {{ form.produit }}
+                            </div>
+
+                            <!-- Carton -->
+                            <div class="form-field-horizontal">
+                                {{ form.carton.label_tag }}
+                                {{ form.carton }}
+                            </div>
+
+                            <!-- Type de vente -->
+                            <div class="form-field-horizontal">
+                                {{ form.type_vente.label_tag }}
+                                {{ form.type_vente }}
+                            </div>
+
+                            <!-- Poids (conditionnel) -->
+                            <div class="form-field-horizontal" id="poids-container">
+                                {{ form.poids_vendu.label_tag }}
+                                {{ form.poids_vendu }}
+                            </div>
+
+                            <!-- Prix unitaire -->
+                            <div class="form-field-horizontal">
+                                {{ form.prix_unitaire.label_tag }}
+                                {{ form.prix_unitaire }}
+                            </div>
+
+                            <!-- Réduction -->
+                            <div class="form-field-horizontal">
+                                {{ form.reduction.label_tag }}
+                                {{ form.reduction }}
+                            </div>
+
+                            <!-- Total calculé -->
+                            <div class="form-field-horizontal-full">
+                                <label class="form-label fw-bold">Total à payer</label>
+                                <input type="text" id="total_affiche"
+                                       class="form-control fw-bold text-success"
+                                       readonly value="0">
+                            </div>
+
+                            <!-- Bouton d'enregistrement -->
+                            <div class="btn-submit-horizontal">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if edit_mode %}
+                                        Mettre à jour
+                                    {% else %}
+                                        Enregistrer
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LISTE DES VENTES ================= -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>📋 Ventes du jour ({{ nombre_ventes }})</h5>
+                        <h5 class="text-success">
+                            Total jour : {{ total_jour }} FCFA
+                        </h5>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Produit</th>
+                                    <th>Type</th>
+                                    <th>Poids</th>
+                                    <th>PU</th>
+                                    <th>Réduction</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in ventes reversed %}
+                                <tr>
+                                    <td>{{ v.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ v.produit.name }}</td>
+                                    <td>{{ v.get_type_vente_display }}</td>
+                                    <td>
+                                        {% if v.poids_vendu %}
+                                            {{ v.poids_vendu }} Kg
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ v.prix_unitaire }}</td>
+                                    <td>{{ v.reduction }}</td>
+                                    <td class="fw-bold">{{ v.total_price }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'vente_update' v.id %}" class="btn btn-sm btn-warning">✏️</a>
+                                            <a href="{% url 'vente_delete' v.id %}"
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Supprimer cette vente ?')">
+                                                🗑️
+                                            </a>
+                                            <button class="btn btn-sm btn-success"
+                                                onclick="printRecu(
+                                                    '{{ v.produit.name }}',
+                                                    '{{ v.get_type_vente_display }}',
+                                                    '{{ v.poids_vendu|default_if_none:"" }}',
+                                                    '{{ v.prix_unitaire }}',
+                                                    '{{ v.reduction }}',
+                                                    '{{ v.total_price }}',
+                                                    '{{ v.created_at|date:"d/m/Y H:i" }}'
+                                                )">
+                                                🧾
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Aucune vente enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- ================= JAVASCRIPT ================= -->
+<!-- ================= JS ================= -->
 <script>
-const produitSelect = document.getElementById("id_produit");
-const typeVente = document.getElementById("id_type_vente");
-const poidsInput = document.getElementById("id_poids_vendu");
-const prixInput = document.getElementById("id_prix_unitaire");
-const reductionInput = document.getElementById("id_reduction");
-const totalPreview = document.getElementById("totalPreview");
-const poidsBlock = document.getElementById("poids-block");
+    const produitSelect = document.getElementById("id_produit");
+    const typeVenteSelect = document.getElementById("id_type_vente");
+    const prixInput = document.getElementById("id_prix_unitaire");
+    const poidsInput = document.getElementById("id_poids_vendu");
+    const reductionInput = document.getElementById("id_reduction");
+    const totalAffiche = document.getElementById("total_affiche");
+    const poidsContainer = document.getElementById("poids-container");
 
-/* ===== CALCUL TOTAL ===== */
-function calculerTotal() {
-    let poids = parseFloat(poidsInput?.value || 0);
-    let prix = parseFloat(prixInput.value || 0);
-    let reduction = parseFloat(reductionInput.value || 0);
+    function togglePoids() {
+        if (typeVenteSelect.value === "DETAIL") {
+            poidsContainer.style.display = "block";
+        } else {
+            poidsContainer.style.display = "none";
+            if (poidsInput) poidsInput.value = "";
+        }
+    }
 
-    let total = (typeVente.value === "DETAIL")
-        ? (poids * prix) - reduction
-        : prix - reduction;
+    function fetchPrix() {
+        if (!produitSelect.value || !typeVenteSelect.value) return;
 
-    totalPreview.value = total > 0 ? total.toFixed(0) + " FCFA" : "0 FCFA";
-}
+        fetch(`/ajax/prix/?produit=${produitSelect.value}&type=${typeVenteSelect.value}`)
+            .then(res => res.json())
+            .then(data => {
+                prixInput.value = data.prix;
+                calculTotal();
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération du prix:', error);
+            });
+    }
 
-/* ===== AFFICHAGE POIDS ===== */
-function togglePoids() {
-    poidsBlock.style.display =
-        typeVente.value === "DETAIL" ? "block" : "none";
-    calculerTotal();
-    chargerPrix();
-}
+    function calculTotal() {
+        const prix = parseFloat(prixInput.value) || 0;
+        const reduction = parseFloat(reductionInput.value) || 0;
+        const poids = parseFloat(poidsInput?.value) || 0;
 
-/* ===== CHARGER PRIX ===== */
-function chargerPrix() {
-    if (!produitSelect.value || !typeVente.value) return;
+        let total = 0;
 
-    fetch(`/get-prix-unitaire/?produit=${produitSelect.value}&type=${typeVente.value}`)
-        .then(r => r.json())
-        .then(data => {
-            prixInput.value = data.prix;
-            calculerTotal();
+        if (typeVenteSelect.value === "DETAIL") {
+            total = (poids * prix) - reduction;
+        } else {
+            total = prix - reduction;
+        }
+
+        totalAffiche.value = total > 0 ? total.toFixed(2) + " FCFA" : "0 FCFA";
+    }
+
+    // Événements
+    if (produitSelect) produitSelect.addEventListener("change", fetchPrix);
+    if (typeVenteSelect) {
+        typeVenteSelect.addEventListener("change", () => {
+            togglePoids();
+            fetchPrix();
         });
-}
+    }
+    
+    if (poidsInput) poidsInput.addEventListener("input", calculTotal);
+    if (reductionInput) reductionInput.addEventListener("input", calculTotal);
+    if (prixInput) prixInput.addEventListener("input", calculTotal);
 
-/* ===== EVENTS ===== */
-poidsInput?.addEventListener("input", calculerTotal);
-reductionInput.addEventListener("input", calculerTotal);
-produitSelect.addEventListener("change", chargerPrix);
-typeVente.addEventListener("change", togglePoids);
-togglePoids();
+    // Initialisation
+    togglePoids();
+    calculTotal();
+    
+    // Si on est en mode édition, on calcule le total initial
+    setTimeout(calculTotal, 100);
+</script>
 
-/* ===== REÇU ===== */
-function imprimerRecu(date, produit, type, poids, prix, reduction, total) {
-
-    let html = `
+<script>
+function printRecu(produit, type, poids, prix, reduction, total, date) {
+    const receiptHTML = `
     <html>
     <head>
+        
         <style>
-            body { font-family: Arial; }
-            .ticket {
-                width: 280px;
-                border: 1px solid #000;
+            body {
+                width: 90mm;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
                 padding: 10px;
+                margin: 0;
             }
-            h3 { text-align: center; }
-            .total { font-weight: bold; font-size: 18px; }
+            .center { 
+                text-align: center; 
+                margin-bottom: 10px;
+            }
+            .line { 
+                border-top: 1px dashed #000; 
+                margin: 8px 0; 
+            }
+            .title {
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .total {
+                font-weight: bold;
+                font-size: 16px;
+                color: #000;
+                margin: 10px 0;
+            }
+            .thank-you {
+                margin-top: 15px;
+                font-style: italic;
+            }
+            .details {
+                margin: 5px 0;
+            }
         </style>
     </head>
-    <body>
-        <div class="ticket">
-            <h3>🧾 REÇU</h3>
-            <p>Date : ${date}</p>
-            <p>Produit : ${produit}</p>
-            <p>Type : ${type}</p>
-            ${poids ? `<p>Poids : ${poids} kg</p>` : ""}
-            <p>Prix unitaire : ${prix} FCFA</p>
-            <p>Réduction : ${reduction} FCFA</p>
-            <hr>
-            <p class="total">TOTAL : ${total} FCFA</p>
-        </div>
-        <script>window.print();<\/script>
-    </body>
-    </html>`;
+    <body onload="window.print(); setTimeout(() => window.close(), 500);">
 
-    let w = window.open("", "", "width=350,height=500");
-    w.document.write(html);
-    w.document.close();
+        <div class="center">
+            <div class="title">MONTS DES OLIVIERS</div>
+            <div>Reçu de vente</div>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="details">
+            <strong>Produit:</strong> ${produit}<br>
+            <strong>Type:</strong> ${type}<br>
+            ${poids ? `<strong>Poids:</strong> ${poids} Kg<br>` : ""}
+            <strong>Prix unitaire:</strong> ${prix} FCFA<br>
+            <strong>Réduction:</strong> ${reduction} FCFA<br>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="center total">
+            TOTAL: ${total} FCFA
+        </div>
+
+        <div class="line"></div>
+
+        <div class="details">
+            <strong>Date:</strong> ${date}<br>
+            <strong>Heure:</strong> ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
+        </div>
+
+        <div class="center thank-you">
+            Merci pour votre achat 🙏
+        </div>
+
+    </body>
+    </html>
+    `;
+
+    const printWindow = window.open("", "_blank", "width=1140,height=809");
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
 }
 </script>
 

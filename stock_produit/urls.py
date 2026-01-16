@@ -22,13 +22,12 @@ urlpatterns = [
     path("cartons/", views.cartons, name="cartons"),
     path("cartons/update/<int:id>/", views.cartons_update, name="cartons_update"),
     path("cartons/delete/<int:id>/", views.cartons_delete, name="cartons_delete"),
-
+   
     # ================= VENTES =================
     path("ventes/", views.ventes, name="ventes"),
-    path("ventes/modifier/<int:pk>/", views.vente_update, name="vente_modifier"),
-    path("ventes/supprimer/<int:pk>/", views.vente_delete, name="vente_supprimer"),
-    path("get-prix-unitaire/", views.get_prix_unitaire, name="get_prix_unitaire"),
-
+    path("ventes/<int:pk>/update/", views.vente_update, name="vente_update"),
+    path("ventes/<int:pk>/delete/", views.vente_delete, name="vente_delete"),
+    path("ajax/prix/", views.get_prix_unitaire, name="get_prix_unitaire"),
     # ================= UTILISATEURS =================
     path("utilisateurs/", views.user_list, name="users"),
 

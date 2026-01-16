@@ -15,7 +15,7 @@ from django.db.models import  Q
 from django.contrib import messages
 from datetime import datetime
 
-from .models import Produit, Carton
+from .models import Produit, Carton, Vente
 from .models import User
 from .forms import (
     ProduitForm,
@@ -258,6 +258,9 @@ def cartons_delete(request, id):
     carton.delete()
     return redirect("cartons")
 
+
+
+
 def ventes(request):
     # 📅 Date sélectionnée
     date_str = request.GET.get("date")
@@ -322,6 +325,7 @@ def ventes(request):
         "ventes": ventes,
         "nombre_ventes": ventes.count(),
         "total_jour": total_jour,
+        "selected_date": selected_date, 
     }
 
     return render(request, "Vente/ventes.html", context)
@@ -350,7 +354,11 @@ def vente_update(request, pk):
 @login_required
 def vente_delete(request, pk):
     sale = get_object_or_404(Vente, pk=pk)
-    sale.delete()
+
+    with transaction.atomic():
+        sale.restore_stock()   # 🔁 RESTAURATION
+        sale.delete()          # ❌ SUPPRESSION
+
     return redirect("ventes")
 
 
