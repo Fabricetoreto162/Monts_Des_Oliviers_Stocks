@@ -16,7 +16,7 @@
             </label>
             <input type="date" id="date" name="date" class="form-control w-auto" value="{{ selected_date }}">
         </form>
-                <div class="total-jour text-end mt-4 pt-3 border-top">
+        <div class="total-jour text-end mt-4 pt-3 border-top">
             <h5 class="text-primary">
                 <i class="bi bi-cash-stack me-2"></i>
                 Total jour : <span class="fw-bold">{{ total_jour }}</span> FCFA
@@ -275,7 +275,7 @@
                 </div>
 
                 <!-- Reçu POS caché pour impression -->
-                <div id="recu-pos-12{{ r.id }}" class="recu-pos d-none">
+                <div id="recu-pos-12{{ r.id }}" class="recu-pos d-none" >
                     <div class="text-center">
                         <strong>MONTS DES OLIVIERS</strong><br>
                         Système de ventes<br>
@@ -352,8 +352,6 @@
                 </div>
             </div>
         {% endif %}
-
-
     </div>
 </div>
 
@@ -474,19 +472,58 @@
     opacity: 0.2;
 }
 
-/* Reçu POS pour impression */
+/* ================= REÇU POS POUR IMPRESSION (PETITE TAILLE) ================= */
 .recu-pos {
-    width: 80mm;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.4;
-    padding: 6mm;
-    color: #000;
+    width: 80mm; /* Largeur standard pour ticket de caisse */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px !important; /* Plus petit pour ticket */
+    line-height: 1.2;
+    padding: 3mm !important; /* Moins de padding */
+    color: black;
+    background: white;
+    margin: 0;
+    box-sizing: border-box;
+    
 }
 
+.recu-pos * {
+    font-size: 10px !important;
+    line-height: 1.2;
+    margin: 1px 0;
+    
+}
+
+.recu-pos strong {
+    font-size: 11px !important;
+}
+
+.recu-pos .text-center {
+    text-align: center !important;
+}
+
+.recu-pos .text-end {
+    text-align: right !important;
+}
+
+.recu-pos hr {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 4px 0 !important;
+    padding: 0;
+    
+}
+
+.recu-pos div {
+    margin-bottom: 3px !important;
+    padding: 0;
+}
+
+/* Impression spécifique pour le reçu */
 @media print {
     body * {
         visibility: hidden;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .recu-pos, .recu-pos * {
@@ -494,10 +531,25 @@
     }
     
     .recu-pos {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 80mm;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        height: 200mm !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 3mm !important;
+        font-size: 10px !important;
+        
+    }
+    
+    @page {
+        size: 100mm auto;
+        margin: 0;
+        padding: 0;
     }
 }
 
@@ -646,12 +698,60 @@ function imprimerRecu(recuId) {
         return;
     }
 
-    const contenu = recu.innerHTML;
-    const original = document.body.innerHTML;
-    document.body.innerHTML = contenu;
-    window.print();
-    document.body.innerHTML = original;
-    location.reload();
+    // Créer une nouvelle fenêtre d'impression
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Reçu ${recuId}</title>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 18px;
+                    width: 80mm;
+            ;
+                }
+                @page {
+                    size: 80mm auto;
+                    margin: 0;
+                }
+                .recu-content {
+                    width: 58mm;
+                    padding: 3mm;
+                    box-sizing: border-box;
+                    
+                    
+                }
+                .text-center { text-align: center; }
+                .text-end { text-align: right; }
+                hr {
+                    border: none;
+                    border-top: 1px dashed #000;
+                    margin: 4px 0;
+                }
+                strong { font-size: 20px; }
+                div { margin-bottom: 3px; }
+            </style>
+        </head>
+        <body>
+            <div class="recu-content">
+                ${recu.innerHTML}
+            </div>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 100);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 const dateInput = document.getElementById("date");
