@@ -122,3 +122,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 
+# Dossier static global
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+
+
