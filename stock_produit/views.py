@@ -7,6 +7,9 @@ import json
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.timezone import now
+from django.db.models import Count, Q, F, Sum
+from decimal import Decimal
+
 
 
 
@@ -98,12 +101,33 @@ def dashboard(request):
     )["total"] or Decimal("0")
 
     # 🔹 PRODUITS DISPONIBLES
+   # 🔹 PRODUITS + ÉTAT DES CARTONS
     produits_disponibles = Produit.objects.annotate(
-    cartons_disponibles=Count(
+
+    # 🟢 Cartons encore disponibles
+    cartons_restants=Count(
         "cartons",
         filter=Q(cartons__is_sold_out=False)
-    )
+    ),
+
+    # 🟡 Cartons en cours de vente
+    cartons_en_cours=Count(
+        "cartons",
+        filter=Q(
+            cartons__remaining_weight__gt=0,
+            cartons__remaining_weight__lt=F("cartons__initial_weight")
+        )
+    ),
+
+    # 🔵 Cartons pleins
+    cartons_pleins=Count(
+        "cartons",
+        filter=Q(
+            cartons__remaining_weight=F("cartons__initial_weight")
+        )
+    ),
 )
+
 
 
     total_produits = produits_disponibles.count()
@@ -111,17 +135,19 @@ def dashboard(request):
 
     # 🔹 STOCKS FAIBLES
     stocks_faibles = produits_disponibles.filter(
-        cartons_disponibles__lte=F("stock_alert")
+        cartons_restants__lte=F("stock_alert")
     )
+
 
     context = {
         "selected_date": date,
         "total_jour": total_jour,
         "chiffre_affaire_mois": chiffre_affaire_mois,
-        "total_produits": total_produits,
-        "total_cartons": total_cartons,
+        "total_produits": produits_disponibles.count(),
+        "total_cartons": Carton.objects.filter(is_sold_out=False).count(),
         "stocks_faibles": stocks_faibles,
     }
+
 
     return render(request, "Dashboard/index.html", context)
 

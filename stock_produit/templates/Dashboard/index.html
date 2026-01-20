@@ -12,101 +12,108 @@
             <p class="text-muted">Aperçu global de votre activité</p>
         </div>
         <div class="col-md-4">
-            
-                        <form method="get" id="form-date" class="d-flex align-items-center gap-3">
-                            <label for="date" class="fw-bold text-primary mb-0">
-                                <i class="bi bi-calendar3 me-2"></i>Date :
-                            </label>
-                            <input type="date" id="date" name="date" class="form-control w-auto" value="{{ selected_date }}">
-                        </form>
-           
+            <form method="get" id="form-date" class="d-flex align-items-center gap-3">
+                <label for="date" class="fw-bold text-primary mb-0">
+                    <i class="bi bi-calendar3 me-2"></i>Date :
+                </label>
+                <input type="date" id="date" name="date" class="form-control w-auto" 
+                       value="{{ selected_date }}" aria-label="Sélectionner une date">
+            </form>
         </div>
     </div>
 
     <!-- Cartes de statistiques -->
     <div class="row mb-4">
+        <!-- Ventes du jour -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card shadow-sm border-0 h-100">
+            <div class="card stat-card shadow-sm border-0 h-100" role="region" aria-label="Ventes du jour">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="stat-label">Ventes du jour</h6>
-                            <h3 class="stat-value text-success">{{ total_jour }} FCFA</h3>
-                            <p class="stat-change text-success">
-                                <i class="bi bi-arrow-up-right me-1"></i>Journalier
+                            <h2 class="h6 stat-label">Ventes du jour</h2>
+                            <p class="stat-value text-success">{{ total_jour }} FCFA</p>
+                            <p class="stat-change text-success mb-0">
+                                <i class="bi bi-arrow-up-right me-1" aria-hidden="true"></i>Journalier
                             </p>
                         </div>
-                        <div class="stat-icon">
+                        <div class="stat-icon" aria-hidden="true">
                             <i class="bi bi-cash-stack"></i>
                         </div>
                     </div>
-                    <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress mt-2" style="height: 5px;" role="progressbar" 
+                         aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar bg-success" style="width: 85%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- CA Mensuel -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card shadow-sm border-0 h-100">
+            <div class="card stat-card shadow-sm border-0 h-100" role="region" aria-label="Chiffre d'affaires mensuel">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="stat-label">CA Mensuel</h6>
-                            <h3 class="stat-value text-primary">{{ chiffre_affaire_mois }} FCFA</h3>
-                            <p class="stat-change text-primary">
-                                <i class="bi bi-calendar-month me-1"></i>Ce mois
+                            <h2 class="h6 stat-label">CA Mensuel</h2>
+                            <p class="stat-value text-primary">{{ chiffre_affaire_mois }} FCFA</p>
+                            <p class="stat-change text-primary mb-0">
+                                <i class="bi bi-calendar-month me-1" aria-hidden="true"></i>Ce mois
                             </p>
                         </div>
-                        <div class="stat-icon">
+                        <div class="stat-icon" aria-hidden="true">
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
                     </div>
-                    <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress mt-2" style="height: 5px;" role="progressbar"
+                         aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar bg-primary" style="width: 65%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Produits en stock -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card shadow-sm border-0 h-100">
+            <div class="card stat-card shadow-sm border-0 h-100" role="region" aria-label="Produits en stock">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="stat-label">Produits en stock</h6>
-                            <h3 class="stat-value text-info">{{ total_produits }}</h3>
-                            <p class="stat-change text-info">
-                                <i class="bi bi-boxes me-1"></i>Actifs
+                            <h2 class="h6 stat-label">Produits en stock</h2>
+                            <p class="stat-value text-info">{{ total_produits }}</p>
+                            <p class="stat-change text-info mb-0">
+                                <i class="bi bi-boxes me-1" aria-hidden="true"></i>Actifs
                             </p>
                         </div>
-                        <div class="stat-icon">
+                        <div class="stat-icon" aria-hidden="true">
                             <i class="bi bi-box-seam"></i>
                         </div>
                     </div>
-                    <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress mt-2" style="height: 5px;" role="progressbar"
+                         aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar bg-info" style="width: 75%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Cartons disponibles -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card shadow-sm border-0 h-100">
+            <div class="card stat-card shadow-sm border-0 h-100" role="region" aria-label="Cartons disponibles">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="stat-label">Cartons disponibles</h6>
-                            <h3 class="stat-value text-warning">{{ total_cartons }}</h3>
-                            <p class="stat-change text-warning">
-                                <i class="bi bi-pallet me-1"></i>Total
+                            <h2 class="h6 stat-label">Cartons disponibles</h2>
+                            <p class="stat-value text-warning">{{ total_cartons }}</p>
+                            <p class="stat-change text-warning mb-0">
+                                <i class="bi bi-pallet me-1" aria-hidden="true"></i>Total
                             </p>
                         </div>
-                        <div class="stat-icon">
+                        <div class="stat-icon" aria-hidden="true">
                             <i class="bi bi-palette"></i>
                         </div>
                     </div>
-                    <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress mt-2" style="height: 5px;" role="progressbar"
+                         aria-valuenow="55" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar bg-warning" style="width: 55%"></div>
                     </div>
                 </div>
@@ -120,8 +127,8 @@
             <div class="card shadow border-0">
                 <div class="card-header alert-header d-flex justify-content-between align-items-center">
                     <div>
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <span class="h5 mb-0">Alertes de stock faible</span>
+                        <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+                        <h2 class="h5 mb-0 d-inline">Alertes de stock faible</h2>
                         {% if stocks_faibles %}
                         <span class="badge bg-danger ms-2">{{ stocks_faibles|length }}</span>
                         {% endif %}
@@ -132,19 +139,23 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0" aria-label="Liste des alertes de stock faible">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">
-                                        <i class="bi bi-box me-2"></i>Produit
+                                    <th scope="col">Nom</th>
+                                    <th scope="col">
+                                        <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Restants
                                     </th>
-                                    <th>
-                                        <i class="bi bi-box-seam me-2"></i>Cartons restants
+                                    <th scope="col">
+                                        <i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i>En cours
                                     </th>
-                                    <th>
-                                        <i class="bi bi-bell me-2"></i>Seuil d'alerte
+                                    <th scope="col">
+                                        <i class="bi bi-box-fill me-2" aria-hidden="true"></i>Pleins
                                     </th>
-                                    <th class="text-end pe-4">État</th>
+                                    <th scope="col">
+                                        <i class="bi bi-bell me-2" aria-hidden="true"></i>Seuil
+                                    </th>
+                                    <th scope="col" class="text-end pe-4">État</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -152,22 +163,25 @@
                                 <tr class="alert-row">
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="product-icon me-3">
+                                            <div class="product-icon me-3" aria-hidden="true">
                                                 <i class="bi bi-box"></i>
                                             </div>
                                             <div>
                                                 <strong>{{ p.name }}</strong>
-                                                <br>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="stock-indicator">
-                                            <div class="progress" style="height: 25px;">
-                                                {% with percent=p.cartons_disponibles|add:"0"|floatformat:0 %}
+                                            <div class="progress" style="height: 25px;" 
+                                                 role="progressbar" 
+                                                 aria-valuenow="{{ p.cartons_restants }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="{{ p.stock_alert }}">
+                                                {% with percent=p.cartons_restants|add:"0"|floatformat:0 %}
                                                 <div class="progress-bar bg-danger" 
-                                                     style="width: {% widthratio p.cartons_disponibles p.stock_alert 100 %}%">
-                                                    {{ p.cartons_disponibles }}
+                                                     style="width: {% widthratio p.cartons_restants p.stock_alert 100 %}%">
+                                                    {{ p.cartons_restants }}
                                                 </div>
                                                 {% endwith %}
                                             </div>
@@ -175,20 +189,36 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark border">
+                                            {{ p.cartons_en_cours }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            {{ p.cartons_pleins }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
                                             {{ p.stock_alert }}
                                         </span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-exclamation-circle me-1"></i>Faible
-                                        </span>
+                                        {% if p.cartons_restants <= p.stock_alert %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>Faible
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1" aria-hidden="true"></i>OK
+                                            </span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <div class="text-muted">
-                                            <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                                            <i class="bi bi-check-circle display-4 text-success mb-3" aria-hidden="true"></i>
                                             <p class="h5">Aucune alerte de stock</p>
                                             <p class="small">Tous vos stocks sont à des niveaux satisfaisants</p>
                                         </div>
@@ -215,27 +245,10 @@
     margin-bottom: 0.5rem;
 }
 
-.dashboard-filter .input-group {
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.dashboard-filter .form-control {
-    border-left: none;
-    border-right: none;
-    padding: 0.75rem;
-    font-size: 0.95rem;
-}
-
-.dashboard-filter .btn {
-    border-radius: 0 12px 12px 0;
-    padding: 0.75rem 1.5rem;
-}
-
 /* Cartes de statistiques */
 .stat-card {
     border-radius: 15px;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     overflow: hidden;
 }
 
@@ -260,11 +273,11 @@
     font-weight: 700;
     font-size: 1.8rem;
     margin-bottom: 0.25rem;
+    line-height: 1.2;
 }
 
 .stat-change {
     font-size: 0.85rem;
-    margin-bottom: 0;
 }
 
 .stat-icon {
@@ -293,6 +306,7 @@
 /* Table des alertes */
 .alert-row:hover {
     background-color: rgba(220, 53, 69, 0.05);
+    transition: background-color 0.2s ease;
 }
 
 .product-icon {
@@ -319,6 +333,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: width 1.5s ease-in-out;
 }
 
 /* Responsive */
@@ -337,14 +352,6 @@
     
     .stat-icon {
         font-size: 2rem;
-    }
-    
-    .dashboard-filter .btn span {
-        display: none;
-    }
-    
-    .dashboard-filter .btn i {
-        margin: 0;
     }
     
     .table-responsive {
@@ -378,10 +385,16 @@
     }
 }
 
-/* Animation pour les cartes */
+/* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 .stat-card {
@@ -392,23 +405,29 @@
 .stat-card:nth-child(2) { animation-delay: 0.2s; }
 .stat-card:nth-child(3) { animation-delay: 0.3s; }
 .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Focus styles pour accessibilité */
+.form-control:focus,
+.btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #86b7fe;
+    outline: 0;
+}
 </style>
 
 <script>
-// Animation pour les barres de progression
 document.addEventListener('DOMContentLoaded', function() {
-    // Animer les barres de progression dans les cartes
+    // Animation des barres de progression
     const progressBars = document.querySelectorAll('.progress-bar');
     progressBars.forEach(bar => {
         const width = bar.style.width;
         bar.style.width = '0%';
         setTimeout(() => {
             bar.style.width = width;
-            bar.style.transition = 'width 1.5s ease-in-out';
         }, 300);
     });
     
-    // Ajouter un effet de pulsation pour les alertes
+    // Effet de survol pour les lignes d'alerte
     const alertRows = document.querySelectorAll('.alert-row');
     alertRows.forEach(row => {
         row.addEventListener('mouseenter', function() {
@@ -418,14 +437,27 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.boxShadow = 'none';
         });
     });
-});
-
-const dateInput = document.getElementById("date");
-const formDate = document.getElementById("form-date");
-if (dateInput) {
-    dateInput.addEventListener("change", function () {
-        formDate.submit();
+    
+    // Soumission automatique du formulaire date
+    const dateInput = document.getElementById('date');
+    const formDate = document.getElementById('form-date');
+    
+    if (dateInput && formDate) {
+        dateInput.addEventListener('change', function() {
+            formDate.submit();
+        });
+    }
+    
+    // Amélioration du contraste pour les cartes au focus
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('focus', function() {
+            this.style.boxShadow = '0 0 0 3px rgba(0, 123, 255, 0.25)';
+        });
+        card.addEventListener('blur', function() {
+            this.style.boxShadow = '';
+        });
     });
-}
+});
 </script>
 {% endblock %}
