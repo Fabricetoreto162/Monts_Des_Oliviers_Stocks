@@ -53,6 +53,9 @@ urlpatterns = [
     # ================= UTILISATEURS =================
     path("utilisateurs/", views.user_list, name="users"),
 
+
+    path('rapport_journalier/', views.rapport_journalier, name='rapport_journalier'),
+
   
 
 ]

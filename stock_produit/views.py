@@ -7,7 +7,7 @@ import json
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.timezone import now
-from django.db.models import Count, Q, F, Sum
+from django.db.models import Count, Q, F, Sum,Case,When,DecimalField
 from decimal import Decimal
 
 
@@ -45,7 +45,7 @@ def inscription(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("dashboard")
+            return redirect("connexion")
     else:
         form = UserRegisterForm()
 
@@ -530,3 +530,83 @@ def user_list(request):
     return render(request, "User/utilisateurs.html", {
         "users": users
     })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def rapport_journalier(request):
+
+    selected_date = request.GET.get("date")
+    if selected_date:
+        date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    else:
+        date = timezone.now().date()
+
+    # 🔹 Regrouper par produit
+    ventes = (
+        Vente.objects
+        .filter(recu__created_at__date=date)
+        .values('produit__name')
+        .annotate(
+            total_quantite=Sum(
+                Case(
+                    When(type_vente='DETAIL', then=F('poids_vendu')),
+                    When(type_vente='CARTON', then=F('carton__initial_weight')),
+                    default=0,
+                    output_field=DecimalField()
+                )
+            ),
+            total_montant=Sum('total_price')
+        )
+        .order_by('produit__name')
+    )
+
+    # 🔹 Totaux généraux
+    total_detail = (
+        Vente.objects
+        .filter(recu__created_at__date=date, type_vente='DETAIL')
+        .aggregate(total=Sum('total_price'))['total'] or 0
+    )
+
+    total_carton = (
+        Vente.objects
+        .filter(recu__created_at__date=date, type_vente='CARTON')
+        .aggregate(total=Sum('total_price'))['total'] or 0
+    )
+
+    total_general = total_detail + total_carton
+
+    context = {
+        'date': date,
+        'ventes': ventes,
+        'total_detail': total_detail,
+        'total_carton': total_carton,
+        'total_general': total_general,
+    }
+
+    return render(request, "Rapport/rapport_journalier.html", context)

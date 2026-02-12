@@ -1,0 +1,381 @@
+{% extends "Base/base.html" %}
+{% block title %}Reçu du {{ date }}{% endblock %}
+{% block page_title %}Gestion des Rapports journaliers{% endblock %}
+
+{% block content %}
+<div class="container my-4" id="receipt">
+    <h3 class="text-center">
+        <i class="fas fa-receipt me-2" style="color: #3b82f6;"></i> Rapport des ventes - {{ date }}
+    </h3>
+
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité (Kg/carton)</th>
+                <th>Total (FCFA)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in ventes %}
+            <tr>
+                <td>
+                    <span class="product-name">{{ v.produit__name }}</span>
+                </td>
+                <td>
+                    <span class="badge-qty">{{ v.total_quantite|floatformat:2 }}</span>
+                </td>
+                <td>
+                    <span class="amount">{{ v.total_montant|floatformat:2 }}</span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2" style="opacity: 0.5;"></i><br>
+                    Aucune vente enregistrée.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-card">
+        <div class="summary-item">
+            <span class="summary-label">
+                <i class="fas fa-weight-hanging" style="color: #3b82f6;"></i> Vente au détail
+            </span>
+            <span class="summary-value">{{ total_detail|floatformat:2 }} FCFA</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">
+                <i class="fas fa-box" style="color: #f59e0b;"></i> Vente en carton
+            </span>
+            <span class="summary-value">{{ total_carton|floatformat:2 }} FCFA</span>
+        </div>
+        <div class="summary-item total">
+            <span class="summary-label fw-bold">Total général</span>
+            <span class="summary-value grand-total">{{ total_general|floatformat:2 }} FCFA</span>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print me-2"></i> Imprimer le reçu
+        </button>
+    </div>
+</div>
+
+<style>
+    /* ---------- STYLE ÉCRAN – MODERNE & MINIMALISTE ---------- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+        background: #f8fafc;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #0f172a;
+        line-height: 1.5;
+    }
+
+    #receipt {
+        max-width: 1000px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 24px;
+        padding: 32px 36px;
+        box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        transition: box-shadow 0.2s ease;
+    }
+
+    #receipt:hover {
+        box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.08);
+    }
+
+    h3 {
+        font-weight: 700;
+        font-size: 1.75rem;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 1rem;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .table thead th {
+        background: transparent;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1rem;
+        border-bottom: 1.5px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .table tbody tr {
+        background: white;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+        transform: scale(1.01);
+    }
+
+    .table td {
+        padding: 1rem 1rem;
+        border: none;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+
+    .table td:first-child {
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+    }
+
+    .table td:last-child {
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .badge-qty {
+        background: #f1f5f9;
+        color: #1e293b;
+        padding: 0.3rem 0.9rem;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .amount {
+        font-weight: 700;
+        color: #0f172a;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        padding: 0.3rem 1rem;
+        border-radius: 40px;
+        display: inline-block;
+        border: 0.5px solid #e2e8f0;
+    }
+
+    .summary-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        margin-top: 2rem;
+        border: 1px solid #eef2f6;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0.9rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+
+    .summary-label {
+        font-size: 1rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .summary-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .summary-item.total {
+        margin-top: 0.75rem;
+        padding-top: 1.2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .grand-total {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #2563eb;
+        background: linear-gradient(145deg, #eff6ff, #ffffff);
+        padding: 0.3rem 1.2rem;
+        border-radius: 50px;
+        border: 0.5px solid #bfdbfe;
+    }
+
+    .btn-print {
+        background: #0f172a;
+        color: white;
+        border: none;
+        padding: 0.9rem 2.8rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 50px;
+        letter-spacing: 0.3px;
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-print:hover {
+        background: #1e293b;
+        transform: translateY(-3px);
+        box-shadow: 0 16px 25px rgba(15, 23, 42, 0.15);
+    }
+
+    /* ---------- IMPRESSION : FORMAT TICKET POS 80mm (inchangé) ---------- */
+    @media print {
+        @page {
+            size: auto;
+            margin: 0mm;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background: white;
+        }
+
+        body * {
+            visibility: hidden;
+        }
+
+        #receipt, #receipt * {
+            visibility: visible;
+        }
+
+        #receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80mm;
+            padding: 3mm 4mm;
+            margin: 0;
+            background: white;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 9pt;
+            line-height: 1.2;
+        }
+
+        .btn-print, .btn-print * {
+            display: none !important;
+        }
+
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+            padding: 0;
+            border: none;
+            text-align: center;
+            letter-spacing: 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 3px 0;
+            font-size: 8pt;
+        }
+
+        .table thead th {
+            background: none;
+            color: black;
+            border-bottom: 1px solid black;
+            padding: 3px 2px;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+        }
+
+        .table td {
+            padding: 2px 2px;
+            border-bottom: 0.5px solid #ccc;
+            background: none;
+        }
+
+        .table tbody tr {
+            page-break-inside: avoid;
+        }
+
+        .product-name, .badge-qty, .amount {
+            background: none;
+            border: none;
+            padding: 0;
+            border-radius: 0;
+            color: black;
+        }
+
+        .summary-card {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-top: 8px;
+            box-shadow: none;
+        }
+
+        .summary-item {
+            padding: 2px 0;
+            border-bottom: 0.5px dashed black;
+        }
+
+        .summary-item.total {
+            border-top: 0.5px solid black;
+        }
+
+        .grand-total {
+            background: none;
+            border: none;
+            padding: 0;
+            color: black;
+            font-size: 11pt;
+        }
+
+        hr, .d-flex, .fw-bold, .container, .my-4, .mt-4, .text-center {
+            padding: 0;
+            margin: 0;
+        }
+
+        i, .fas {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
