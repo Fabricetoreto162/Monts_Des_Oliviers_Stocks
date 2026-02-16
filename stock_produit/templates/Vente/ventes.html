@@ -274,35 +274,34 @@
                     </button>
                 </div>
 
-                <!-- Reçu POS caché pour impression -->
-                <div id="recu-pos-12{{ r.id }}" class="recu-pos d-none" >
-                    <div class="text-center">
-                        <strong>MONTS DES OLIVIERS</strong><br>
-                        Système de ventes<br>
-                        -----------------------
-                    </div>
-                    <div>
-                        Reçu N° : {{ r.numero }}<br>
-                        Date : {{ r.created_at|date:"d/m/Y H:i" }}
-                    </div>
-                    <hr>
-                    {% for v in r.ventes.all %}
+                    <!-- Reçu POS caché pour impression -->
+                    <div id="recu-pos-12{{ r.id }}" class="recu-pos d-none">
+                        <div class="text-center">
+                            <strong>MONTS DES OLIVIERS</strong><br>
+                            <strong>Système de ventes</strong><br>
+                             <strong>-------------------</strong>
+                        </div>
                         <div>
-                            <strong>{{ v.produit.name }}</strong><br>
-                            {{ v.get_type_vente_display }}
-                            {% if v.poids_vendu %} - {{ v.poids_vendu }} kg {% endif %}<br>
-                            PU : {{ v.prix_unitaire }}  
-                            {% if v.reduction %} (-{{ v.reduction }}) {% endif %}
-                            <div class="text-end">{{ v.total_price }} FCFA</div>
+                            <strong>Reçu N°</strong> : <strong>{{ r.numero }}</strong><br>
+                            <strong> Date :</strong> <strong>{{ r.created_at|date:"d/m/Y H:i" }}</strong>
                         </div>
                         <hr>
-                    {% endfor %}
-                    <div class="text-center">
-                        Merci pour votre achat 🙏<br>
-                        À bientôt
+                        {% for v in r.ventes.all %}
+                            <div style="color:black !important;">
+                                <strong>{{ v.produit.name }}</strong><br>
+                                <strong>{{ v.get_type_vente_display }}</strong>
+                                {% if v.poids_vendu %} - <strong>{{ v.poids_vendu }} kg</strong> {% endif %}<br>
+                                 <strong>PU :</strong> <strong>{{ v.prix_unitaire }}</strong>  
+                                {% if v.reduction %} (<strong>-{{ v.reduction }}</strong>) {% endif %}
+                                <div class="text-end"><strong>{{ v.total_price }} FCFA</strong></div>
+                            </div>
+                            <hr>
+                        {% endfor %}
+                        <div class="text-center" style="color:black;">
+                            <strong>Merci pour votre achat 🙏</strong><br>
+                            <strong>À bientôt</strong>
+                        </div>
                     </div>
-                </div>
-
                 <div class="receipt-body">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0">
@@ -491,6 +490,7 @@
     line-height: 1.2;
     margin: 1px 0;
     
+    
 }
 
 .recu-pos strong {
@@ -543,6 +543,8 @@
         margin: 0 !important;
         padding: 3mm !important;
         font-size: 10px !important;
+       
+
         
     }
     
@@ -722,6 +724,7 @@ function imprimerRecu(recuId) {
                     width: 58mm;
                     padding: 3mm;
                     box-sizing: border-box;
+                    color:black !important;
                     
                     
                 }
@@ -729,15 +732,16 @@ function imprimerRecu(recuId) {
                 .text-end { text-align: right; }
                 hr {
                     border: none;
-                    border-top: 1px dashed #000;
+                    border-top: 1px dashed #dd2323;
                     margin: 4px 0;
                 }
                 strong { font-size: 20px; }
-                div { margin-bottom: 3px; }
+                div { margin-bottom: 3px;
+                color:black !important; }
             </style>
         </head>
         <body>
-            <div class="recu-content">
+            <div class="recu-content ">
                 ${recu.innerHTML}
             </div>
             <script>

@@ -502,7 +502,15 @@
                 <li>
                     <a href="{% url 'rapport_journalier' %}" class="{% if 'rapport_journalier' in request.path %}active{% endif %}">
                         <i class="fa-solid fa-book"></i>
-                        <span>Rapport_journaliers</span>
+                        <span>Rapport Journaliers</span>
+                    </a>
+                </li>
+
+
+                                <li>
+                    <a href="{% url 'rapport_semaine' %}" class="{% if 'rapport_semaine' in request.path %}active{% endif %}">
+                        <i class="fa-solid fa-book"></i>
+                        <span>Rapportde la Semaine</span>
                     </a>
                 </li>
             </ul>

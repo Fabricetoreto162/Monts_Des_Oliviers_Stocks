@@ -26,7 +26,7 @@ from .forms import VenteForm
 from django.db.models import Sum, Count, F
 from django.db.models import  Q
 from django.contrib import messages
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 
 from .models import Produit, Carton, Vente,Recu
@@ -553,12 +553,6 @@ def user_list(request):
 
 
 
-
-
-
-
-
-
 def rapport_journalier(request):
 
     selected_date = request.GET.get("date")
@@ -586,7 +580,6 @@ def rapport_journalier(request):
         .order_by('produit__name')
     )
 
-    # 🔹 Totaux généraux
     total_detail = (
         Vente.objects
         .filter(recu__created_at__date=date, type_vente='DETAIL')
@@ -603,6 +596,7 @@ def rapport_journalier(request):
 
     context = {
         'date': date,
+        'selected_date': date,   # ✅ AJOUT IMPORTANT
         'ventes': ventes,
         'total_detail': total_detail,
         'total_carton': total_carton,
@@ -610,3 +604,79 @@ def rapport_journalier(request):
     }
 
     return render(request, "Rapport/rapport_journalier.html", context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def rapport_semaine(request):
+    week_value = request.GET.get("week")  # Format attendu : "2026-W06"
+
+    if week_value:
+        # Extraire année et numéro de semaine
+        year, week_num = map(int, week_value.split('-W'))
+        # Calcul du lundi de la semaine
+        start_date = date.fromisocalendar(year, week_num, 1)
+        # Calcul du dimanche de la semaine
+        end_date = start_date + timedelta(days=6)
+    else:
+        # Par défaut semaine en cours
+        today = date.today()
+        start_date = today - timedelta(days=today.weekday())  # lundi
+        end_date = start_date + timedelta(days=6)  # dimanche
+
+    # 🔹 Regrouper par produit
+    ventes = (
+        Vente.objects
+        .filter(recu__created_at__date__range=(start_date, end_date))
+        .values('produit__name')
+        .annotate(
+            total_quantite=Sum(
+                Case(
+                    When(type_vente='DETAIL', then=F('poids_vendu')),
+                    When(type_vente='CARTON', then=F('carton__initial_weight')),
+                    default=0,
+                    output_field=DecimalField()
+                )
+            ),
+            total_montant=Sum('total_price')
+        )
+        .order_by('produit__name')
+    )
+
+    # 🔹 Totaux généraux
+    total_detail = (
+        Vente.objects
+        .filter(recu__created_at__date__range=(start_date, end_date), type_vente='DETAIL')
+        .aggregate(total=Sum('total_price'))['total'] or 0
+    )
+
+    total_carton = (
+        Vente.objects
+        .filter(recu__created_at__date__range=(start_date, end_date), type_vente='CARTON')
+        .aggregate(total=Sum('total_price'))['total'] or 0
+    )
+
+    total_general = total_detail + total_carton
+
+    context = {
+        'ventes': ventes,
+        'total_detail': total_detail,
+        'total_carton': total_carton,
+        'total_general': total_general,
+        'start_date': start_date,
+        'end_date': end_date,
+        'selected_week': week_value,
+    }
+
+    return render(request, "Rapport/rapport_semaine.html", context)

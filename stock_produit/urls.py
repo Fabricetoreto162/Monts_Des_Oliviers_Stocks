@@ -55,6 +55,7 @@ urlpatterns = [
 
 
     path('rapport_journalier/', views.rapport_journalier, name='rapport_journalier'),
+    path('rapport_semaine/', views.rapport_semaine, name='rapport_semaine'),
 
   
 
