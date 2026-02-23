@@ -12,5 +12,9 @@ class Recu(models.Model):
             self.total = total
             self.save()
 
+        @property
+        def total_recu(self):
+            return sum(vente.total_price for vente in self.ventes.all())    
+
         def __str__(self):
             return f"Reçu {self.numero}"

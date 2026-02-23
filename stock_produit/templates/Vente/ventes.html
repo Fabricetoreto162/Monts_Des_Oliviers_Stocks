@@ -278,12 +278,11 @@
                     <div id="recu-pos-12{{ r.id }}" class="recu-pos d-none">
                         <div class="text-center">
                             <strong>MONTS DES OLIVIERS</strong><br>
-                            <strong>Système de ventes</strong><br>
-                             <strong>-------------------</strong>
+                             <strong>---------</strong>
                         </div>
                         <div>
-                            <strong>Reçu N°</strong> : <strong>{{ r.numero }}</strong><br>
-                            <strong> Date :</strong> <strong>{{ r.created_at|date:"d/m/Y H:i" }}</strong>
+                            <strong>Reçu N°</strong> : <strong>{{ r.numero }} // {{ r.created_at|date:"d/m/Y H:i" }}</strong><br>
+                             
                         </div>
                         <hr>
                         {% for v in r.ventes.all %}
@@ -291,12 +290,21 @@
                                 <strong>{{ v.produit.name }}</strong><br>
                                 <strong>{{ v.get_type_vente_display }}</strong>
                                 {% if v.poids_vendu %} - <strong>{{ v.poids_vendu }} kg</strong> {% endif %}<br>
-                                 <strong>PU :</strong> <strong>{{ v.prix_unitaire }}</strong>  
+                                 <strong>Prix : 
                                 {% if v.reduction %} (<strong>-{{ v.reduction }}</strong>) {% endif %}
                                 <div class="text-end"><strong>{{ v.total_price }} FCFA</strong></div>
                             </div>
-                            <hr>
+                            
+                           
                         {% endfor %}
+                         <hr>
+                            <div style="color:black;">
+                                <strong>TOTAL :</strong>
+                                  <div class="text-end">
+                                    <strong style="font-size:18px;">{{ r.total_recu }} FCFA</strong>
+                                  </div>
+                            </div>
+                            <hr>
                         <div class="text-center" style="color:black;">
                             <strong>Merci pour votre achat 🙏</strong><br>
                             <strong>À bientôt</strong>
@@ -335,9 +343,22 @@
                                         {% else %}-{% endif %}
                                     </td>
                                     <td class="fw-bold text-success">{{ v.total_price }}</td>
+                                    
                                 </tr>
                                 {% endfor %}
+                                                           
+                                
                             </tbody>
+                            <tfoot>
+
+                             <div style="color:black;" >
+                                <strong class="">TOTAL :</strong>
+                                  <div class="  text-end">
+                                    <strong  style="font-size:18px; margin-left: 500px !important;">{{ r.total_recu }} FCFA</strong>
+                                  </div>
+                            </div>
+                            </tfoot>
+                          
                         </table>
                     </div>
                 </div>
